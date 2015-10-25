@@ -27,7 +27,6 @@ segment datos data
 	msj_base_10_a_8 db 10,13,'El numero en base 8 es: $'
 	msj_base_8_a_10 db 10,13,'El numero en base 10 es: $'
 
-	suma db 0
 	numero resb 1
 	numero_base resb 1
 
