@@ -20,7 +20,7 @@ segment datos data
 	msj_ingreso_base db 10,13,'Por favor, ingrese la base del numero a convertir: $'
 
 	msj_base_invalido db 10,13,'Puede ingresar 8 o 10, vuelva a ingresar la base por favor.',10,13,'$'
-	msj_num_invalido db 10,13,'Rango de numero a convertir 0 - 1000, vuelva a ingresar el numero por favor.',10,13,'$'
+	msj_num_invalido db 10,13,'Rango permitido: 0 - 255, vuelva a ingresar el numero por favor.',10,13,'$'
 
 	msj_ingreso_num db 10,13,'Por favor, ingrese el numero a convertir: $'
 
@@ -85,20 +85,20 @@ ing_num:	mov dx,0
 			mov ah,0ah
 			int 21h
 
-			; paso cadena a numero. en bl seteo la base del numero ingresado x teclado
-			mov bx,0
-			mov bl,byte[numero_base]
-			call cadena_a_num
-
 ;######### validacion numero ####################################################
+			cmp byte[cadena],2dh ; es negativo?
+			je invalido
 
-			cmp byte[numero],0
-			jb invalido
+			cmp byte[cadena-1],3
+			jb num_valido
 
-			mov ax,numero
-			sub ax,1000
-			cmp ax,0
-			jb invalido
+			cmp byte[cadena],50
+			ja invalido
+
+			cmp byte[cadena+1],53
+			ja invalido
+			cmp byte[cadena+2],53
+			ja invalido
 
 			jmp num_valido
 
@@ -107,6 +107,11 @@ invalido:	mov dx,msj_num_invalido
 			jmp ing_num
 
 num_valido:
+			; paso cadena a numero. en bl seteo la base del numero ingresado x teclado
+			mov bx,0
+			mov bl,byte[numero_base]
+			call cadena_a_num
+
 			cmp byte[numero_base],8
 
 ;########## si la base es 8 paso a base 10 ####################################
