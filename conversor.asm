@@ -92,6 +92,7 @@ ing_num:    mov dx,0
 
             cmp byte[cadena],50
             ja invalido
+            jb num_valido
 
             cmp byte[cadena+1],53
             ja invalido
@@ -168,13 +169,28 @@ conv_base_10:
 
             div bl
 
-            add al,48
+            cmp al,9
+            jb digitos_2
+            ja digitos_3
+
+digitos_3:
+            add ah,48
+            mov byte[resultado+2],ah
+
+            mov bl,al
+            mov ax,0
+            mov al,bl
+            mov bx,10
+
+            div bl
+
+digitos_2:  add al,48
             add ah,48
 
             mov byte[resultado],al
             mov byte[resultado+1],ah
 
-            mov dx,resultado
+ver_res:    mov dx,resultado
             call ver_msj
 
             jmp continuar
