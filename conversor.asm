@@ -57,6 +57,7 @@ inicio:		lea dx,[msj_ingreso_base]
 			mov ah,0ah
 			int 21h
 
+			; paso cadena a numero. en bl seteo la base del numero ingresado x teclado
 			mov bx,0
 			mov bl,10
 			call cadena_a_num
@@ -84,6 +85,7 @@ ing_num:	mov dx,0
 			mov ah,0ah
 			int 21h
 
+			; paso cadena a numero. en bl seteo la base del numero ingresado x teclado
 			mov bx,0
 			mov bl,byte[numero_base]
 			call cadena_a_num
