@@ -1,0 +1,252 @@
+PGM     SUBENTRY BASES=(3) 
+
+		WTO 'MANEJO DE FRACCIONES'
+		WTO 'Puede cargar hasta 10 fracciones.'
+		LA 5,VEC
+		
+OTRO    CP TOTAL,=P'10'
+        BL ING
+
+        MVC MSJ,MSJ_MAX
+        BAL 10,VER_MSJ
+		
+		B MAR_FIN
+		
+ING		BAL 10,ING_FRAC
+
+   		BAL 10,VALIDAR
+		CLI ESVALID,C'S'
+		BNE OTRO
+
+        BAL 10,AGREGAR
+        AP TOTAL,=P'1'
+
+        BAL 10,CONTINUA
+        CLI CONT,C'S'
+        BE OTRO		
+
+MAR_FIN MVC 0(1,5),=C'*'
+
+		WTO 'FRACCIONES INGRESADAS: '
+		BAL 10,VER_FRA		
+
+MENU    BAL 10,VER_MENU
+		
+		CP OPC,=P'1'
+        BNE ES_OPC2
+
+        BAL 10,CALC_SUM
+        B MENU
+
+ES_OPC2 CP OPC,=P'2'
+        BNE ES_OPC3
+
+        BAL 10,ORD_DES
+        B MENU
+
+ES_OPC3 CP OPC,=P'3'
+		BNE ES_OPC4
+
+        BAL 10,ORD_ASC
+        B MENU
+
+ES_OPC4 CP OPC,=P'4'
+        BNE ES_OPC5
+
+        BAL 10,ING_PER
+        B MENU
+		
+ES_OPC5 CP OPC,=P'5'
+        BNE ES_OPC6
+
+        BAL 10,EXP_DEC
+        B MENU
+
+ES_OPC6	CP OPC,=P'6'
+        BNE MENU
+
+        SUBEXIT
+
+ 
+* RUTINAS *********************************************************************
+
+VER_MENU    WTO ' '
+			WTO 'Operaciones disponibles: '
+			WTO '1. Calcular suma de las fracciones.'
+			WTO '2. Ordenar de mayor a menor.'
+			WTO '3. Ordenar de menor a mayor.'
+			WTO '4. Ver expresion decimal de las fracciones.'
+			WTO '5. Ver forma fraccionaria de un numero periodico.'
+			WTO '6. Salir'
+			
+			WTOR 'Por favor, ingrese una opcion: ',OPCC,,WAITECB
+			WAIT ECB=WAITECB
+			
+			PACK OPC,OPCC
+			BR 10
+
+ING_FRAC   	WTOR 'Ingrese el numerador por favor: ',VNUMC,,WAITECB
+			WAIT ECB=WAITECB
+			
+			WTOR 'Ahora, ingrese el denominador: ',VDENC,,WAITECB
+			WAIT ECB=WAITECB
+			BR 10
+			
+AGREGAR		MVC 0(2,5),VNUMC
+			A 5,=F'2'
+			
+			MVC 0(2,5),VDENC
+			A 5,=F'2'
+			
+			BR 10
+			
+CONTINUA    WTOR 'S para ingresar otra fraccion: ',CONT,,WAITECB
+			WAIT ECB=WAITECB
+            BR 10
+			
+VER_FRA    	WTO MF=(E,VEC-4)
+			BR 10
+			
+VER_MSJ     WTO MF=(E,MSJ-4)
+            BR 10
+			
+VALIDAR     MVI ESVALID,C'S'
+            BR 10
+
+CALC_SUM	LA 5,VEC
+			
+			CP TOTAL,=P'1'
+			BE FIN_CALC
+			
+			PACK NUM1,0(2,5)	
+			A 5,=F'2'
+			PACK DEN1,0(2,5)			
+			A 5,=F'2'
+
+* CICLO
+CICLO1		PACK NUM2,0(2,5)
+			A 5,=F'2'
+			PACK DEN2,0(2,5)
+			A 5,=F'2'
+
+* ME GUARDO DENOMINADOR 1
+			ZAP _DEN1,DEN1
+			
+* BUSQUEDA DEL DENOMINADOR COMUN
+* BUSCO EL MAYOR DENOMINADOR
+			SP DEN1,DEN2
+* DEN1 = DEN1 - DEN2
+			CP DEN1,=P'0'
+			BL DEN1_MEN	
+* SI DEN1 MAYOR			
+			ZAP DIVIDEN,_DEN1
+			DP DIVIDEN,DEN2
+			CP DIVIDEN+2(2),=P'0'
+			BNE MULT_DEN
+			
+			ZAP DEN_COM,_DEN1	
+			B SIGO
+			
+* SI DEN1 MENOR			
+DEN1_MEN   	ZAP DIVIDEN,DEN2
+			DP DIVIDEN,_DEN1
+			CP DIVIDEN+2(2),=P'0'
+			BNE MULT_DEN			
+			
+			ZAP DEN_COM,DEN2
+			B SIGO
+
+* NO SON MULTIPLOS, BUSCO COM DEN CON: DEN1 * DEN2
+MULT_DEN	ZAP DEN1,_DEN1
+			MP DEN1,DEN2
+			ZAP DEN_COM,DEN1
+
+SIGO		ZAP _DEN_COM,DEN_COM
+			DP DEN_COM,_DEN1
+			MP NUM1,DEN_COM(2)
+			
+			ZAP DEN_COM,_DEN_COM
+			DP DEN_COM,DEN2
+			MP NUM2,DEN_COM(2)
+			
+			AP NUM1,NUM2
+			
+			ZAP SUM_NUM,NUM1
+			ZAP SUM_DEN,_DEN_COM
+			
+			ZAP NUM1,SUM_NUM
+			ZAP DEN1,SUM_DEN
+			
+			CLI 0(5),C'*'
+			BNE CICLO1
+			
+VER_RES		WTO 'SUMA: '
+
+			UNPK RES_SUM,SUM_NUM
+			MVZ RES_SUM,=X'FFFFFFFFFF'
+			WTO MF=(E,RES_SUM-4)
+			
+			WTO '----'
+			
+			UNPK RES_SUM,SUM_DEN
+			MVZ RES_SUM,=X'FFFFFFFFFF'
+			WTO MF=(E,RES_SUM-4)
+		
+FIN_CALC	BR 10
+
+
+ORD_DES     BR 10
+ORD_ASC     BR 10
+EXP_DEC     BR 10
+ING_PER     BR 10
+			
+* VARIABLES *******************************************************************
+
+* GUARDO NUMERADOR|DENOMINADOR POR C/FRACCION INGRESADA. 
+	DC H'46'
+	DC H'0'
+VEC DC 21CL2'0'
+
+		DC H'6'
+		DC H'0'
+VNUMC DS CL2
+WAITECB DC F'0'
+
+VDENC DS CL2
+
+	    DC H'6'
+		DC H'0'
+NUM_FRA DS CL2
+
+DEN_COM DC PL4'0'
+_DEN_COM DC PL4'0'
+DEN1 DS PL2
+_DEN1 DS PL2
+DEN2 DS PL2
+
+NUM1 DS PL2
+NUM2 DS PL2
+
+SUM_NUM DC PL3'0'
+SUM_DEN DC PL3'0'
+DIVIDEN DS PL4
+
+	DC H'9'
+	DC H'0'
+RES_SUM DS CL5
+
+MSJ_MAX DC CL40'Puede ingresar solo 10 fracciones.'
+
+WTOBLOCK DC H'44'
+         DC H'0'
+MSJ DS CL40
+
+TOTAL   DC P'0'
+
+ESVALID DS C
+
+CONT DC C'N'
+OPCC DS C
+OPC DS P
+DOBLE DS D
+        END
