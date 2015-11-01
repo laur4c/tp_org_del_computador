@@ -104,7 +104,24 @@ CONTINUA    WTOR 'S para ingresar otra fraccion: ',CONT,,WAITECB
             WAIT ECB=WAITECB
             BR 10
 
-VER_FRA     WTO MF=(E,VEC-4)
+VER_FRA     LA 5,VEC
+
+SIGO4       MVC RES_SUM(2),0(5)
+            MVZ RES_SUM(2),=X'FFFFFFFFFF'
+            MVC RES_SUM+2(1),=C'/'
+
+            A 5,=F'2'
+
+            MVC RES_SUM+3(2),0(5)
+            MVZ RES_SUM+3(2),=X'FFFFFFFFFF'
+
+            A 5,=F'2'
+
+            WTO MF=(E,RES_SUM-4)
+
+            CLI 0(5),C'*'
+            BNE SIGO4
+
             BR 10
 
 VER_MSJ     WTO MF=(E,MSJ-4)
@@ -123,16 +140,113 @@ CALC_SUM    LA 5,VEC
             PACK DEN1,0(2,5)
             A 5,=F'2'
 
-* CICLO
 CICLO1      PACK NUM2,0(2,5)
             A 5,=F'2'
             PACK DEN2,0(2,5)
             A 5,=F'2'
 
-* ME GUARDO DENOMINADOR 1
-            ZAP _DEN1,DEN1
+            BAL 11,C_DENCOM
+
+            AP NUM1,NUM2
+
+            ZAP SUM_NUM,NUM1
+            ZAP SUM_DEN,_DEN_COM
+
+            ZAP NUM1,SUM_NUM
+            ZAP DEN1,SUM_DEN
+
+            CLI 0(5),C'*'
+            BNE CICLO1
+
+VER_RES     WTO 'SUMA: '
+
+            UNPK RES_SUM,SUM_NUM
+            MVZ RES_SUM,=X'FFFFFFFFFF'
+            WTO MF=(E,RES_SUM-4)
+
+            WTO '-----'
+
+            UNPK RES_SUM,SUM_DEN
+            MVZ RES_SUM,=X'FFFFFFFFFF'
+            WTO MF=(E,RES_SUM-4)
+
+FIN_CALC    BR 10
+
+
+ORD_DES     ZAP DOBLE,TOTAL
+            CVB 6,DOBLE
+
+CICLO5      LA 5,VEC
+
+            ZAP DOBLE,TOTAL
+            SP DOBLE,=P'1'
+            CVB 7,DOBLE
+
+CICLO6      PACK NUM1,0(2,5)
+            PACK DEN1,2(2,5)
+
+            PACK NUM2,4(2,5)
+            PACK DEN2,6(2,5)
+
+* BUSCO DENOMINADOR COMUN, PARA LUEGO COMPARAR LOS NUMERADORES
+            BAL 11,C_DENCOM
+
+            SP NUM1,NUM2
+            CP NUM1,=P'0'
+            BH SIGO3
+
+* CAMBIO DE POSICION
+            MVC AUX1,4(5)
+            MVC 4(4,5),0(5)
+            MVC 0(4,5),AUX1
+
+SIGO3       A 5,=F'4'
+
+            BCT 7,CICLO6
+            BCT 6,CICLO5
+
+            BAL 11,VER_FRA
+            BR 10
+
+ORD_ASC     ZAP DOBLE,TOTAL
+            CVB 6,DOBLE
+
+CICLO2      LA 5,VEC
+
+            ZAP DOBLE,TOTAL
+            SP DOBLE,=P'1'
+            CVB 7,DOBLE
+
+CICLO3      PACK NUM1,0(2,5)
+            PACK DEN1,2(2,5)
+
+            PACK NUM2,4(2,5)
+            PACK DEN2,6(2,5)
+
+* BUSCO DENOMINADOR COMUN, PARA LUEGO COMPARAR LOS NUMERADORES
+            BAL 11,C_DENCOM
+
+            SP NUM1,NUM2
+            CP NUM1,=P'0'
+            BL SIGO2
+
+* CAMBIO DE POSICION
+            MVC AUX1,4(5)
+            MVC 4(4,5),0(5)
+            MVC 0(4,5),AUX1
+
+SIGO2       A 5,=F'4'
+
+            BCT 7,CICLO3
+            BCT 6,CICLO2
+
+            BAL 11,VER_FRA
+            BR 10
 
 * BUSQUEDA DEL DENOMINADOR COMUN
+* ME GUARDO DENOMINADOR 1
+C_DENCOM    ZAP _DEN1,DEN1
+
 * BUSCO EL MAYOR DENOMINADOR
             SP DEN1,DEN2
 * DEN1 = DEN1 - DEN2
@@ -169,34 +283,8 @@ SIGO        ZAP _DEN_COM,DEN_COM
             DP DEN_COM,DEN2
             MP NUM2,DEN_COM(2)
 
-            AP NUM1,NUM2
+            BR 11
 
-            ZAP SUM_NUM,NUM1
-            ZAP SUM_DEN,_DEN_COM
-
-            ZAP NUM1,SUM_NUM
-            ZAP DEN1,SUM_DEN
-
-            CLI 0(5),C'*'
-            BNE CICLO1
-
-VER_RES     WTO 'SUMA: '
-
-            UNPK RES_SUM,SUM_NUM
-            MVZ RES_SUM,=X'FFFFFFFFFF'
-            WTO MF=(E,RES_SUM-4)
-
-            WTO '----'
-
-            UNPK RES_SUM,SUM_DEN
-            MVZ RES_SUM,=X'FFFFFFFFFF'
-            WTO MF=(E,RES_SUM-4)
-
-FIN_CALC    BR 10
-
-
-ORD_DES     BR 10
-ORD_ASC     BR 10
 EXP_DEC     BR 10
 ING_PER     BR 10
 
@@ -227,6 +315,8 @@ DEN2 DS PL2
 NUM1 DS PL2
 NUM2 DS PL2
 
+AUX1 DS CL4
+
 SUM_NUM DC PL3'0'
 SUM_DEN DC PL3'0'
 DIVIDEN DS PL4
@@ -241,7 +331,7 @@ WTOBLOCK DC H'44'
          DC H'0'
 MSJ DS CL40
 
-TOTAL   DC P'0'
+TOTAL   DC PL2'0'
 
 ESVALID DS C
 
