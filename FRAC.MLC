@@ -27,7 +27,7 @@ ING     BAL 10,ING_FRAC
 
 MAR_FIN MVC 0(1,5),=C'*'
 
-        WTO 'FRACCIONES INGRESADAS: '
+        WTO 'Fracciones Ingresadas: '
         BAL 10,VER_FRA
 
 MENU    BAL 10,VER_MENU
@@ -53,13 +53,13 @@ ES_OPC3 CP OPC,=P'3'
 ES_OPC4 CP OPC,=P'4'
         BNE ES_OPC5
 
-        BAL 10,ING_PER
+        BAL 10,EXP_DEC
         B MENU
 
 ES_OPC5 CP OPC,=P'5'
         BNE ES_OPC6
 
-        BAL 10,EXP_DEC
+        BAL 10,ING_PER
         B MENU
 
 ES_OPC6 CP OPC,=P'6'
@@ -75,7 +75,7 @@ VER_MENU    WTO ' '
             WTO '1. Calcular suma de las fracciones.'
             WTO '2. Ordenar de mayor a menor.'
             WTO '3. Ordenar de menor a mayor.'
-            WTO '4. Ver expresion decimal de las fracciones.'
+            WTO '4. Ver expresion decimal de una  fraccion.'
             WTO '5. Ver forma fraccionaria de un numero periodico.'
             WTO '6. Salir'
 
@@ -105,19 +105,29 @@ CONTINUA    WTOR 'S para ingresar otra fraccion: ',CONT,,WAITECB
             BR 10
 
 VER_FRA     LA 5,VEC
+* NRO DE FRACCION, EMPIEZO EN 1
+            L 6,=F'1'
 
-SIGO4       MVC RES_SUM(2),0(5)
-            MVZ RES_SUM(2),=X'FFFFFFFFFF'
-            MVC RES_SUM+2(1),=C'/'
+SIGO4       CVD 6,NUMP
+            UNPK VNUMC,NUMP
+            MVZ VNUMC,=X'FFFF'
+
+            MVC NUM(1),VNUMC+1
+            MVC NUM+1(1),=C'.'
+            MVC NUM+2(2),0(5)
+            MVZ NUM+2(2),=X'FFFFFFFFFF'
+            MVC NUM+4(1),=C'/'
 
             A 5,=F'2'
 
-            MVC RES_SUM+3(2),0(5)
-            MVZ RES_SUM+3(2),=X'FFFFFFFFFF'
+            MVC NUM+5(2),0(5)
+            MVZ NUM+5(2),=X'FFFFFFFFFF'
 
             A 5,=F'2'
 
-            WTO MF=(E,RES_SUM-4)
+            WTO MF=(E,NUM-4)
+
+            A 6,=F'1'
 
             CLI 0(5),C'*'
             BNE SIGO4
@@ -158,7 +168,7 @@ CICLO1      PACK NUM2,0(2,5)
             CLI 0(5),C'*'
             BNE CICLO1
 
-VER_RES     WTO 'SUMA: '
+VER_RES     WTO 'Suma: '
 
             UNPK RES_SUM,SUM_NUM
             MVZ RES_SUM,=X'FFFFFFFFFF'
@@ -285,7 +295,79 @@ SIGO        ZAP _DEN_COM,DEN_COM
 
             BR 11
 
-EXP_DEC     BR 10
+EXP_DEC     WTOR 'Ingrese el NRO de la fraccion: ',NROC,,WAITECB
+            WAIT ECB=WAITECB
+
+            PACK NUM1,NROC
+            SP NUM1,=P'1'
+            MP NUM1,=P'4'
+
+            ZAP DOBLE,NUM1
+            CVB 6,DOBLE
+* ME POSICIONO EN EL VECTOR
+            LA 5,VEC
+            AR 5,6
+
+* EN NUM1 Y DEN1 TENGO LA FRACCION QUE QUIERO MOSTRAR
+            PACK NUM1,0(2,5)
+            A 5,=F'2'
+            PACK DEN1,0(2,5)
+
+            ZAP DIVIDEN,NUM1
+            DP DIVIDEN,DEN1
+
+* CARGO EN R7 LA EXP DEC DE LA FRACCION
+            LA 7,EDEC
+
+            UNPK NRO,DIVIDEN(2)
+            MVZ NRO,=X'FFFF'
+            MVC 0(2,7),NRO
+            MVC 2(1,7),=C','
+
+            A 7,=F'3'
+            L 6,=F'0'
+
+* CARGO TOTAL DE CARACTERES AGREGADOS DESPUES DE LA COMA
+            L 8,=F'0'
+
+* SI EL RESTO ES CERO, TERMINO COMPLETANDO CON CEROS AL FINAL
+            CP DIVIDEN+2(2),=P'0'
+            BE F_EXPDEC
+
+* HASTA 5 DIGITOS DECIMALES
+            L 6,=F'5'
+            ZAP DIVIDEN,DIVIDEN+2(2)
+
+* MULTIPLICO RESTO POR 10
+CICLO7      MP DIVIDEN,=P'10'
+            DP DIVIDEN,DEN1
+
+            UNPK NROC,DIVIDEN(2)
+            MVZ NROC,=X'FFFF'
+            MVC 0(1,7),NROC
+            A 7,=F'1'
+            A 8,=F'1'
+
+            CP DIVIDEN+2(2),=P'0'
+            BE F_EXPDEC
+
+            ZAP DIVIDEN,DIVIDEN+2(2)
+
+            BCT 6,CICLO7
+
+F_EXPDEC    L 9,=F'5'
+            SR 9,8
+            C 9,=F'0'
+            BE VER_EXPD
+
+COMP_CER    MVC 0(1,7),=C'0'
+            A 7,=F'1'
+            BCT 9,COMP_CER
+
+VER_EXPD    WTO 'Expresion Decimal: '
+            WTO MF=(E,EDEC-4)
+            BR 10
+
 ING_PER     BR 10
 
 * VARIABLES *******************************************************************
@@ -325,6 +407,17 @@ DIVIDEN DS PL4
     DC H'0'
 RES_SUM DS CL5
 
+    DC H'11'
+    DC H'0'
+NUM DS CL7
+
+    DC H'12'
+    DC H'0'
+EDEC DS CL8
+NRO DS CL2
+
+NUMP DS PL8
+
 MSJ_MAX DC CL40'Puede ingresar solo 10 fracciones.'
 
 WTOBLOCK DC H'44'
@@ -335,6 +428,7 @@ TOTAL   DC PL2'0'
 
 ESVALID DS C
 
+NROC DS C
 CONT DC C'N'
 OPCC DS C
 OPC DS P
