@@ -102,11 +102,11 @@ ING_FRAC    WTOR 'Ingrese el numerador por favor: ',VNUMC,,WAITECB
 
 * AGREGAR FRACCION AL VECTOR **************************************************
 
-AGREGAR     MVC 0(2,5),VNUMC
-            A 5,=F'2'
+AGREGAR     MVC 0(4,5),VNUMC
+            A 5,=F'4'
 
-            MVC 0(2,5),VDENC
-            A 5,=F'2'
+            MVC 0(4,5),VDENC
+            A 5,=F'4'
 
             BR 10
 
@@ -122,23 +122,24 @@ VER_FRA     LA 5,VEC
 
 SIGO4       CVD 6,NUMP
             UNPK VNUMC,NUMP
-            MVZ VNUMC,=X'FFFF'
+            MVZ VNUMC,=X'FFFFFFFF'
 
-            MVC NUM(1),VNUMC+1
+            MVC NUM(1),VNUMC+3
             MVC NUM+1(1),=C'.'
-            MVC NUM+2(2),0(5)
-            MVZ NUM+2(2),=X'FFFFFFFFFF'
-            MVC NUM+4(1),=C'/'
+            MVC NUM+2(4),0(5)
+            MVZ NUM+2(4),=X'FFFFFFFFFF'
+            MVC NUM+6(1),=C'/'
 
-            A 5,=F'2'
+            A 5,=F'4'
 
-            MVC NUM+5(2),0(5)
-            MVZ NUM+5(2),=X'FFFFFFFFFF'
+            MVC NUM+7(4),0(5)
+            MVZ NUM+7(4),=X'FFFFFFFFFF'
 
-            A 5,=F'2'
+            A 5,=F'4'
 
             WTO MF=(E,NUM-4)
 
+* SUMO UNO AL CONTADOR DE FRACCIONES
             A 6,=F'1'
 
             CLI 0(5),C'*'
@@ -159,15 +160,15 @@ CALC_SUM    LA 5,VEC
             CP TOTAL,=P'1'
             BE FIN_CALC
 
-            PACK NUM1,0(2,5)
-            A 5,=F'2'
-            PACK DEN1,0(2,5)
-            A 5,=F'2'
+            PACK NUM1,0(4,5)
+            A 5,=F'4'
+            PACK DEN1,0(4,5)
+            A 5,=F'4'
 
-CICLO1      PACK NUM2,0(2,5)
-            A 5,=F'2'
-            PACK DEN2,0(2,5)
-            A 5,=F'2'
+CICLO1      PACK NUM2,0(4,5)
+            A 5,=F'4'
+            PACK DEN2,0(4,5)
+            A 5,=F'4'
 
             BAL 11,C_DENCOM
 
@@ -185,20 +186,23 @@ CICLO1      PACK NUM2,0(2,5)
 VER_RES     WTO 'Suma: '
 
             UNPK RES_SUM,SUM_NUM
-            MVZ RES_SUM,=X'FFFFFFFFFF'
+            MVZ RES_SUM,=X'FFFFFFFF'
             WTO MF=(E,RES_SUM-4)
 
-            WTO '-----'
+            WTO '-------'
 
             UNPK RES_SUM,SUM_DEN
-            MVZ RES_SUM,=X'FFFFFFFFFF'
+            MVZ RES_SUM,=X'FFFFFFFF'
             WTO MF=(E,RES_SUM-4)
 
 FIN_CALC    BR 10
 
 * ORDEN DESCENDIENTE **********************************************************
 
-ORD_DES     ZAP DOBLE,TOTAL
+ORD_DES     CP TOTAL,=P'1'
+            BE FIN_ORDD
+
+            ZAP DOBLE,TOTAL
             CVB 6,DOBLE
 
 CICLO5      LA 5,VEC
@@ -207,11 +211,11 @@ CICLO5      LA 5,VEC
             SP DOBLE,=P'1'
             CVB 7,DOBLE
 
-CICLO6      PACK NUM1,0(2,5)
-            PACK DEN1,2(2,5)
+CICLO6      PACK NUM1,0(4,5)
+            PACK DEN1,4(4,5)
 
-            PACK NUM2,4(2,5)
-            PACK DEN2,6(2,5)
+            PACK NUM2,8(4,5)
+            PACK DEN2,12(4,5)
 
 * BUSCO DENOMINADOR COMUN, PARA LUEGO COMPARAR LOS NUMERADORES
             BAL 11,C_DENCOM
@@ -221,21 +225,24 @@ CICLO6      PACK NUM1,0(2,5)
             BH SIGO3
 
 * CAMBIO DE POSICION
-            MVC AUX1,4(5)
-            MVC 4(4,5),0(5)
-            MVC 0(4,5),AUX1
+            MVC AUX1,8(5)
+            MVC 8(8,5),0(5)
+            MVC 0(8,5),AUX1
 
-SIGO3       A 5,=F'4'
+SIGO3       A 5,=F'8'
 
             BCT 7,CICLO6
             BCT 6,CICLO5
 
-            BAL 11,VER_FRA
+FIN_ORDD    BAL 11,VER_FRA
             BR 10
 
 * ORDEN ASCENDIENTE ***********************************************************
 
-ORD_ASC     ZAP DOBLE,TOTAL
+ORD_ASC     CP TOTAL,=P'1'
+            BE FIN_ORDA
+
+            ZAP DOBLE,TOTAL
             CVB 6,DOBLE
 
 CICLO2      LA 5,VEC
@@ -244,11 +251,11 @@ CICLO2      LA 5,VEC
             SP DOBLE,=P'1'
             CVB 7,DOBLE
 
-CICLO3      PACK NUM1,0(2,5)
-            PACK DEN1,2(2,5)
+CICLO3      PACK NUM1,0(4,5)
+            PACK DEN1,4(4,5)
 
-            PACK NUM2,4(2,5)
-            PACK DEN2,6(2,5)
+            PACK NUM2,8(4,5)
+            PACK DEN2,12(4,5)
 
 * BUSCO DENOMINADOR COMUN, PARA LUEGO COMPARAR LOS NUMERADORES
             BAL 11,C_DENCOM
@@ -258,16 +265,16 @@ CICLO3      PACK NUM1,0(2,5)
             BL SIGO2
 
 * CAMBIO DE POSICION
-            MVC AUX1,4(5)
-            MVC 4(4,5),0(5)
-            MVC 0(4,5),AUX1
+            MVC AUX1,8(5)
+            MVC 8(8,5),0(5)
+            MVC 0(8,5),AUX1
 
-SIGO2       A 5,=F'4'
+SIGO2       A 5,=F'8'
 
             BCT 7,CICLO3
             BCT 6,CICLO2
 
-            BAL 11,VER_FRA
+FIN_ORDA    BAL 11,VER_FRA
             BR 10
 
 * BUSQUEDA DEL DENOMINADOR COMUN **********************************************
@@ -283,7 +290,7 @@ C_DENCOM    ZAP _DEN1,DEN1
 * SI DEN1 MAYOR
             ZAP DIVIDEN,_DEN1
             DP DIVIDEN,DEN2
-            CP DIVIDEN+2(2),=P'0'
+            CP DIVIDEN+4(4),=P'0'
             BNE MULT_DEN
 
             ZAP DEN_COM,_DEN1
@@ -292,7 +299,7 @@ C_DENCOM    ZAP _DEN1,DEN1
 * SI DEN1 MENOR
 DEN1_MEN    ZAP DIVIDEN,DEN2
             DP DIVIDEN,_DEN1
-            CP DIVIDEN+2(2),=P'0'
+            CP DIVIDEN+4(4),=P'0'
             BNE MULT_DEN
 
             ZAP DEN_COM,DEN2
@@ -305,11 +312,11 @@ MULT_DEN    ZAP DEN1,_DEN1
 
 SIGO        ZAP _DEN_COM,DEN_COM
             DP DEN_COM,_DEN1
-            MP NUM1,DEN_COM(2)
+            MP NUM1,DEN_COM(4)
 
             ZAP DEN_COM,_DEN_COM
             DP DEN_COM,DEN2
-            MP NUM2,DEN_COM(2)
+            MP NUM2,DEN_COM(4)
 
             BR 11
 
@@ -320,7 +327,7 @@ EXP_DEC     WTOR 'Ingrese el NRO de la fraccion: ',NROC,,WAITECB
 
             PACK NUM1,NROC
             SP NUM1,=P'1'
-            MP NUM1,=P'4'
+            MP NUM1,=P'8'
 
             ZAP DOBLE,NUM1
             CVB 6,DOBLE
@@ -329,9 +336,9 @@ EXP_DEC     WTOR 'Ingrese el NRO de la fraccion: ',NROC,,WAITECB
             AR 5,6
 
 * EN NUM1 Y DEN1 TENGO LA FRACCION QUE QUIERO MOSTRAR
-            PACK NUM1,0(2,5)
-            A 5,=F'2'
-            PACK DEN1,0(2,5)
+            PACK NUM1,0(4,5)
+            A 5,=F'4'
+            PACK DEN1,0(4,5)
 
             ZAP DIVIDEN,NUM1
             DP DIVIDEN,DEN1
@@ -339,39 +346,39 @@ EXP_DEC     WTOR 'Ingrese el NRO de la fraccion: ',NROC,,WAITECB
 * CARGO EN R7 LA EXP DEC DE LA FRACCION
             LA 7,EXPDEC
 
-            UNPK NRO,DIVIDEN(2)
-            MVZ NRO,=X'FFFF'
-            MVC 0(2,7),NRO
-            MVC 2(1,7),=C','
+            UNPK NRO,DIVIDEN(4)
+            MVZ NRO,=X'FFFFFFFF'
+            MVC 0(4,7),NRO
+            MVC 4(1,7),=C','
 
-            A 7,=F'3'
+            A 7,=F'5'
             L 6,=F'0'
 
 * CARGO TOTAL DE CARACTERES AGREGADOS DESPUES DE LA COMA
             L 8,=F'0'
 
 * SI EL RESTO ES CERO, TERMINO COMPLETANDO CON CEROS AL FINAL
-            CP DIVIDEN+2(2),=P'0'
+            CP DIVIDEN+4(4),=P'0'
             BE F_EXPDEC
 
 * HASTA 5 DIGITOS DECIMALES
             L 6,=F'5'
-            ZAP DIVIDEN,DIVIDEN+2(2)
+            ZAP DIVIDEN,DIVIDEN+4(4)
 
 * MULTIPLICO RESTO POR 10
 CICLO7      MP DIVIDEN,=P'10'
             DP DIVIDEN,DEN1
 
-            UNPK NROC,DIVIDEN(2)
-            MVZ NROC,=X'FFFF'
+            UNPK NROC,DIVIDEN(4)
+            MVZ NROC,=X'FFFFFFFF'
             MVC 0(1,7),NROC
             A 7,=F'1'
             A 8,=F'1'
 
-            CP DIVIDEN+2(2),=P'0'
+            CP DIVIDEN+4(4),=P'0'
             BE F_EXPDEC
 
-            ZAP DIVIDEN,DIVIDEN+2(2)
+            ZAP DIVIDEN,DIVIDEN+4(4)
 
             BCT 6,CICLO7
 
@@ -380,9 +387,9 @@ F_EXPDEC    L 9,=F'5'
             C 9,=F'0'
             BE VER_EXPD
 
-COMP_CER    MVC 0(1,7),=C'0'
+AG_CEROS    MVC 0(1,7),=C'0'
             A 7,=F'1'
-            BCT 9,COMP_CER
+            BCT 9,AG_CEROS
 
 VER_EXPD    WTO 'Expresion Decimal: '
             WTO MF=(E,EXPDEC-4)
@@ -520,13 +527,13 @@ AVANZO8     MVC 0(1,8),0(7)
 
             WTO 'Aproximacion Fraccionaria: '
             UNPK RES_SUM,NUM1
-            MVZ RES_SUM,=X'FFFFFFFFFF'
+            MVZ RES_SUM,=X'FFFFFFFF'
             WTO MF=(E,RES_SUM-4)
 
-            WTO '-----'
+            WTO '-------'
 
             UNPK RES_SUM,_DEN_COM
-            MVZ RES_SUM,=X'FFFFFFFFFF'
+            MVZ RES_SUM,=X'FFFFFFFF'
             WTO MF=(E,RES_SUM-4)
 
             BR 10
@@ -548,44 +555,44 @@ PERIODOC DS CL4
 C1 DS P
 C2 DS P
 
-    DC H'12'
+    DC H'14'
     DC H'0'
-EXPDEC DS CL8
+EXPDEC DS CL10
 
-NRO DS CL2
+NRO DS CL4
 NROC DS C
 NUMP DS PL8
 DENP DS PL8
+    DC H'15'
+    DC H'0'
+NUM DS CL11
+
+AUX1 DS CL8
+
+SUM_NUM DC PL4'0'
+SUM_DEN DC PL4'0'
+DIVIDEN DS PL8
+
     DC H'11'
     DC H'0'
-NUM DS CL7
+RES_SUM DS CL7
 
-AUX1 DS CL4
-
-SUM_NUM DC PL3'0'
-SUM_DEN DC PL3'0'
-DIVIDEN DS PL4
-
-    DC H'9'
-    DC H'0'
-RES_SUM DS CL5
-
-VNUMC DS CL2
-VDENC DS CL2
+VNUMC DS CL4
+VDENC DS CL4
 WAITECB DC F'0'
 
-DEN_COM DC PL4'0'
-_DEN_COM DC PL4'0'
-DEN1 DS PL2
-_DEN1 DS PL2
-DEN2 DS PL2
-NUM1 DS PL2
-NUM2 DS PL2
+DEN_COM DC PL8'0'
+_DEN_COM DC PL8'0'
+DEN1 DS PL4
+_DEN1 DS PL4
+DEN2 DS PL4
+NUM1 DS PL4
+NUM2 DS PL4
 
 * GUARDO NUMERADOR|DENOMINADOR POR C/FRACCION INGRESADA.
-    DC H'46'
+    DC H'88'
     DC H'0'
-VEC DC 21CL2'0'
+VEC DC 21CL4'0'
 
 MSJ_MAX DC CL40'Puede ingresar solo 10 fracciones.'
 
