@@ -59,7 +59,7 @@ ES_OPC4 CP OPC,=P'4'
 ES_OPC5 CP OPC,=P'5'
         BNE ES_OPC6
 
-        BAL 10,ING_PER
+        BAL 10,EXP_FRA
         B MENU
 
 ES_OPC6 CP OPC,=P'6'
@@ -323,7 +323,7 @@ EXP_DEC     WTOR 'Ingrese el NRO de la fraccion: ',NROC,,WAITECB
             DP DIVIDEN,DEN1
 
 * CARGO EN R7 LA EXP DEC DE LA FRACCION
-            LA 7,EDEC
+            LA 7,EXPDEC
 
             UNPK NRO,DIVIDEN(2)
             MVZ NRO,=X'FFFF'
@@ -371,41 +371,42 @@ COMP_CER    MVC 0(1,7),=C'0'
             BCT 9,COMP_CER
 
 VER_EXPD    WTO 'Expresion Decimal: '
-            WTO MF=(E,EDEC-4)
+            WTO MF=(E,EXPDEC-4)
             BR 10
 
-ING_PER     WTOR 'Ingrese parte entera: ',ENTEROC,,WAITECB
+EXP_FRA     WTOR 'Ingrese parte entera: ',ENTEROC,,WAITECB
             WAIT ECB=WAITECB
-            PACK ENTERO,ENTEROC
+            PACK ENTEROP,ENTEROC
 
             WTOR 'Tiene anteperiodo? (S si tiene): ',OPCC,,WAITECB
             WAIT ECB=WAITECB
 
             CLI OPCC,C'S'
-            BNE INIT_ANTE
+            BNE INI_ANTE
 
             WTOR 'Ingrese anteperiodo: ',ANTEPERC,,WAITECB
             WAIT ECB=WAITECB
 
-            PACK ANTEPER,ANTEPERC
-            B PED_PER
+            PACK ANTEPERP,ANTEPERC
+            B ING_PER
 
-INIT_ANTE   ZAP ANTEPER,=P'0'
+INI_ANTE    ZAP ANTEPERP,=P'0'
             MVC ANTEPERC,=C'0000'
 
-PED_PER     WTOR 'Ingrese periodo: ',PERC,,WAITECB
+ING_PER     WTOR 'Ingrese periodo: ',PERIODOC,,WAITECB
             WAIT ECB=WAITECB
 
 
 * JUNTO NRO DETRAS DE LA COMA
             LA 7,ANTEPERC
-            LA 8,PERC
-            LA 9,N_PERIOD
+            LA 8,PERIODOC
+
+            LA 9,A_EXPFRA
 
             ZAP C1,=P'4'
             ZAP C2,=P'4'
 
-LOOP1       CLI 0(7),C'0'
+AVANZO0     CLI 0(7),C'0'
             BNE AVANZO1
 
             MVC 0(1,9),=C'0'
@@ -413,7 +414,7 @@ LOOP1       CLI 0(7),C'0'
             LA 7,1(7)
             SP C1,=P'1'
 
-            B LOOP1
+            B AVANZO0
 
 AVANZO1     CLI 0(8),C'0'
             BNE AVANZO2
@@ -426,10 +427,10 @@ AVANZO1     CLI 0(8),C'0'
 
 AVANZO2     ZAP DOBLE,C1
             CVB 4,DOBLE
-* EN R5 CANTIDAD DIGITOS NO PERIODICOS
+* EN R5 # DIGITOS NO PERIODICOS
             LR 5,4
 
-* EN R11 CANTIDAD DIGITOS PERIODICOS
+* EN R11 # DIGITOS PERIODICOS
             ZAP DOBLE,C2
             CVB 6,DOBLE
             LR 11,6
@@ -452,10 +453,12 @@ AVANZO4     MVC 0(1,9),0(8)
             LA 8,1(8)
             BCT 6,AVANZO4
 
-            PACK NUMP,N_PERIOD
-            SP NUMP,ANTEPER
+* EN NUMP, NUMERADOR EXP FRACCIONARIA
+            PACK NUMP,A_EXPFRA
+* RESTO ANTEPERIODO
+            SP NUMP,ANTEPERP
 
-            LA 7,D_PERIOD
+            LA 7,B_EXPFRA
 
 * AGREGO 9'S POR C/DIGITO PERIODICO
 AVANZO5     MVC 0(1,7),=C'9'
@@ -464,18 +467,17 @@ AVANZO5     MVC 0(1,7),=C'9'
 
 * AGREGO 0'S POR C/DIGITO NO PERIODICO
             C 5,=F'0'
-            BE S2
+            BE SALTEO
 
 AVANZO6     MVC 0(1,7),=C'0'
             LA 7,1(7)
             BCT 5,AVANZO6
 
-S2          L 6,=F'8'
-* EN R6, # DIGITOS
+SALTEO      L 6,=F'8'
             SR 6,12
 
-            LA 7,D_PERIOD
-            LA 8,_DPERIOD
+            LA 7,B_EXPFRA
+            LA 8,D_EXPFRA
 
 AVANZO7     MVC 0(1,8),=C'0'
             LA 8,1(8)
@@ -486,13 +488,14 @@ AVANZO8     MVC 0(1,8),0(7)
             LA 7,1(7)
             BCT 12,AVANZO8
 
-            PACK DENP,_DPERIOD
+* EN DENP, DENOMINADOR DE EXP FRACCIONARIA
+            PACK DENP,D_EXPFRA
 
-* SUMO PARTE ENTERA MAS APROX FRACCIONARIA
+* RESUELVO PARTE ENTERA + FRACCION
             ZAP NUM1,NUMP
             ZAP DEN1,DENP
 
-            ZAP NUM2,ENTERO
+            ZAP NUM2,ENTEROP
             ZAP DEN2,=P'01'
 
             BAL 11,C_DENCOM
@@ -514,44 +517,32 @@ AVANZO8     MVC 0(1,8),0(7)
 
 * VARIABLES **********************************************************
 
-N_PERIOD DS CL8
-D_PERIOD DS CL8
-_DPERIOD DS CL8
+A_EXPFRA DS CL8
+B_EXPFRA DS CL8
+D_EXPFRA DS CL8
 
-ENTERO DS PL4
+ENTEROP DS PL4
 ENTEROC DS CL4
 
-ANTEPER DS PL4
-ANTEPERC DC CL4'0'
+ANTEPERP DS PL4
+ANTEPERC DS CL4
+
+PERIODOC DS CL4
 
 C1 DS P
 C2 DS P
-PERC DS CL4
 
-* GUARDO NUMERADOR|DENOMINADOR POR C/FRACCION INGRESADA.
-    DC H'46'
+    DC H'12'
     DC H'0'
-VEC DC 21CL2'0'
+EXPDEC DS CL8
 
-        DC H'6'
-        DC H'0'
-VNUMC DS CL2
-WAITECB DC F'0'
-
-VDENC DS CL2
-
-        DC H'6'
-        DC H'0'
-NUM_FRA DS CL2
-
-DEN_COM DC PL4'0'
-_DEN_COM DC PL4'0'
-DEN1 DS PL2
-_DEN1 DS PL2
-DEN2 DS PL2
-
-NUM1 DS PL2
-NUM2 DS PL2
+NRO DS CL2
+NROC DS C
+NUMP DS PL8
+DENP DS PL8
+    DC H'11'
+    DC H'0'
+NUM DS CL7
 
 AUX1 DS CL4
 
@@ -563,17 +554,22 @@ DIVIDEN DS PL4
     DC H'0'
 RES_SUM DS CL5
 
-    DC H'11'
-    DC H'0'
-NUM DS CL7
+VNUMC DS CL2
+VDENC DS CL2
+WAITECB DC F'0'
 
-    DC H'12'
-    DC H'0'
-EDEC DS CL8
-NRO DS CL2
+DEN_COM DC PL4'0'
+_DEN_COM DC PL4'0'
+DEN1 DS PL2
+_DEN1 DS PL2
+DEN2 DS PL2
+NUM1 DS PL2
+NUM2 DS PL2
 
-NUMP DS PL8
-DENP DS PL8
+* GUARDO NUMERADOR|DENOMINADOR POR C/FRACCION INGRESADA.
+    DC H'46'
+    DC H'0'
+VEC DC 21CL2'0'
 
 MSJ_MAX DC CL40'Puede ingresar solo 10 fracciones.'
 
@@ -585,9 +581,10 @@ TOTAL   DC PL2'0'
 
 ESVALID DS C
 
-NROC DS C
 CONT DC C'N'
+
 OPCC DS C
 OPC DS P
+
 DOBLE DS D
         END
