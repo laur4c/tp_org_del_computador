@@ -376,15 +376,20 @@ ING_PER     WTOR 'Ingrese parte entera: ',ENTEROC,,WAITECB
             WAIT ECB=WAITECB
 
             CLI OPCC,C'S'
-            BNE PED_PER
+            BNE INIT_ANTE
 
             WTOR 'Ingrese anteperiodo: ',ANTEPERC,,WAITECB
             WAIT ECB=WAITECB
 
+            PACK ANTEPER,ANTEPERC
+            B PED_PER
+
+INIT_ANTE   ZAP ANTEPER,=P'0'
+            MVC ANTEPERC,=C'0000'
+
 PED_PER     WTOR 'Ingrese periodo: ',PERC,,WAITECB
             WAIT ECB=WAITECB
 
-            PACK ANTEPER,ANTEPERC
 
 * JUNTO NRO DETRAS DE LA COMA
             LA 7,ANTEPERC
@@ -427,6 +432,10 @@ AVANZO2     ZAP DOBLE,C1
             AR 12,5
             AR 12,11
 
+* SI # DIGITOS NO PERIODICOS ES CERO, SIGO
+            C 4,=F'0'
+            BE AVANZO4
+
 AVANZO3     MVC 0(1,9),0(7)
             LA 9,1(9)
             LA 7,1(7)
@@ -442,15 +451,21 @@ AVANZO4     MVC 0(1,9),0(8)
 
             LA 7,D_PERIOD
 
+* AGREGO 9'S POR C/DIGITO PERIODICO
 AVANZO5     MVC 0(1,7),=C'9'
             LA 7,1(7)
             BCT 11,AVANZO5
+
+* AGREGO 0'S POR C/DIGITO NO PERIODICO
+            C 5,=F'0'
+            BE S2
 
 AVANZO6     MVC 0(1,7),=C'0'
             LA 7,1(7)
             BCT 5,AVANZO6
 
-            L 6,=F'8'
+S2          L 6,=F'8'
+* EN R6, # DIGITOS
             SR 6,12
 
             LA 7,D_PERIOD
