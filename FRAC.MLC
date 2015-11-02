@@ -368,9 +368,144 @@ VER_EXPD    WTO 'Expresion Decimal: '
             WTO MF=(E,EDEC-4)
             BR 10
 
-ING_PER     BR 10
+ING_PER     WTOR 'Ingrese parte entera: ',ENTEROC,,WAITECB
+            WAIT ECB=WAITECB
+            PACK ENTERO,ENTEROC
 
-* VARIABLES *******************************************************************
+            WTOR 'Tiene anteperiodo? (S si tiene): ',OPCC,,WAITECB
+            WAIT ECB=WAITECB
+
+            CLI OPCC,C'S'
+            BNE PED_PER
+
+            WTOR 'Ingrese anteperiodo: ',ANTEPERC,,WAITECB
+            WAIT ECB=WAITECB
+
+PED_PER     WTOR 'Ingrese periodo: ',PERC,,WAITECB
+            WAIT ECB=WAITECB
+
+            PACK ANTEPER,ANTEPERC
+
+* JUNTO NRO DETRAS DE LA COMA
+            LA 7,ANTEPERC
+            LA 8,PERC
+            LA 9,N_PERIOD
+
+            ZAP C1,=P'4'
+            ZAP C2,=P'4'
+
+LOOP1       CLI 0(7),C'0'
+            BNE AVANZO1
+
+            MVC 0(1,9),=C'0'
+            LA 9,1(9)
+            LA 7,1(7)
+            SP C1,=P'1'
+
+            B LOOP1
+
+AVANZO1     CLI 0(8),C'0'
+            BNE AVANZO2
+
+            MVC 0(1,9),=C'0'
+            LA 9,1(9)
+            LA 8,1(8)
+            SP C2,=P'1'
+            B AVANZO1
+
+AVANZO2     ZAP DOBLE,C1
+            CVB 4,DOBLE
+* EN R5 CANTIDAD DIGITOS NO PERIODICOS
+            LR 5,4
+
+* EN R11 CANTIDAD DIGITOS PERIODICOS
+            ZAP DOBLE,C2
+            CVB 6,DOBLE
+            LR 11,6
+
+            L 12,=F'0'
+            AR 12,5
+            AR 12,11
+
+AVANZO3     MVC 0(1,9),0(7)
+            LA 9,1(9)
+            LA 7,1(7)
+            BCT 4,AVANZO3
+
+AVANZO4     MVC 0(1,9),0(8)
+            LA 9,1(9)
+            LA 8,1(8)
+            BCT 6,AVANZO4
+
+            PACK NUMP,N_PERIOD
+            SP NUMP,ANTEPER
+
+            LA 7,D_PERIOD
+
+AVANZO5     MVC 0(1,7),=C'9'
+            LA 7,1(7)
+            BCT 11,AVANZO5
+
+AVANZO6     MVC 0(1,7),=C'0'
+            LA 7,1(7)
+            BCT 5,AVANZO6
+
+            L 6,=F'8'
+            SR 6,12
+
+            LA 7,D_PERIOD
+            LA 8,_DPERIOD
+
+AVANZO7     MVC 0(1,8),=C'0'
+            LA 8,1(8)
+            BCT 6,AVANZO7
+
+AVANZO8     MVC 0(1,8),0(7)
+            LA 8,1(8)
+            LA 7,1(7)
+            BCT 12,AVANZO8
+
+            PACK DENP,_DPERIOD
+
+* SUMO PARTE ENTERA MAS APROX FRACCIONARIA
+            ZAP NUM1,NUMP
+            ZAP DEN1,DENP
+
+            ZAP NUM2,ENTERO
+            ZAP DEN2,=P'01'
+
+            BAL 11,C_DENCOM
+
+            AP NUM1,NUM2
+
+            WTO 'Aproximacion Fraccionaria: '
+            UNPK RES_SUM,NUM1
+            MVZ RES_SUM,=X'FFFFFFFFFF'
+            WTO MF=(E,RES_SUM-4)
+
+            WTO '-----'
+
+            UNPK RES_SUM,_DEN_COM
+            MVZ RES_SUM,=X'FFFFFFFFFF'
+            WTO MF=(E,RES_SUM-4)
+
+            BR 10
+
+* VARIABLES **********************************************************
+
+N_PERIOD DS CL8
+D_PERIOD DS CL8
+_DPERIOD DS CL8
+
+ENTERO DS PL4
+ENTEROC DS CL4
+
+ANTEPER DS PL4
+ANTEPERC DC CL4'0'
+
+C1 DS P
+C2 DS P
+PERC DS CL4
 
 * GUARDO NUMERADOR|DENOMINADOR POR C/FRACCION INGRESADA.
     DC H'46'
@@ -417,6 +552,7 @@ EDEC DS CL8
 NRO DS CL2
 
 NUMP DS PL8
+DENP DS PL8
 
 MSJ_MAX DC CL40'Puede ingresar solo 10 fracciones.'
 
