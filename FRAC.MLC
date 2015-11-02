@@ -63,6 +63,11 @@ ES_OPC5 CP OPC,=P'5'
         B MENU
 
 ES_OPC6 CP OPC,=P'6'
+        BNE ES_OPC7
+
+        BAL 10,VER_FRA
+
+ES_OPC7 CP OPC,=P'7'
         BNE MENU
 
         SUBEXIT
@@ -77,7 +82,8 @@ VER_MENU    WTO ' '
             WTO '3. Ordenar de menor a mayor.'
             WTO '4. Ver expresion decimal de una  fraccion.'
             WTO '5. Ver forma fraccionaria de un numero periodico.'
-            WTO '6. Salir'
+            WTO '6. Ver fracciones ingresadas.'
+            WTO '7. Salir'
 
             WTOR 'Por favor, ingrese una opcion: ',OPCC,,WAITECB
             WAIT ECB=WAITECB
