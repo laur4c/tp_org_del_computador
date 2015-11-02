@@ -91,12 +91,16 @@ VER_MENU    WTO ' '
             PACK OPC,OPCC
             BR 10
 
+* INGRESO FRACCION ************************************************************
+
 ING_FRAC    WTOR 'Ingrese el numerador por favor: ',VNUMC,,WAITECB
             WAIT ECB=WAITECB
 
             WTOR 'Ahora, ingrese el denominador: ',VDENC,,WAITECB
             WAIT ECB=WAITECB
             BR 10
+
+* AGREGAR FRACCION AL VECTOR **************************************************
 
 AGREGAR     MVC 0(2,5),VNUMC
             A 5,=F'2'
@@ -109,6 +113,8 @@ AGREGAR     MVC 0(2,5),VNUMC
 CONTINUA    WTOR 'S para ingresar otra fraccion: ',CONT,,WAITECB
             WAIT ECB=WAITECB
             BR 10
+
+* VER FRACCIONES INGRESADAS ***************************************************
 
 VER_FRA     LA 5,VEC
 * NRO DE FRACCION, EMPIEZO EN 1
@@ -145,6 +151,8 @@ VER_MSJ     WTO MF=(E,MSJ-4)
 
 VALIDAR     MVI ESVALID,C'S'
             BR 10
+
+* CALCULAR SUMA DE FRACCIONES *************************************************
 
 CALC_SUM    LA 5,VEC
 
@@ -188,6 +196,7 @@ VER_RES     WTO 'Suma: '
 
 FIN_CALC    BR 10
 
+* ORDEN DESCENDIENTE **********************************************************
 
 ORD_DES     ZAP DOBLE,TOTAL
             CVB 6,DOBLE
@@ -224,6 +233,8 @@ SIGO3       A 5,=F'4'
             BAL 11,VER_FRA
             BR 10
 
+* ORDEN ASCENDIENTE ***********************************************************
+
 ORD_ASC     ZAP DOBLE,TOTAL
             CVB 6,DOBLE
 
@@ -259,7 +270,8 @@ SIGO2       A 5,=F'4'
             BAL 11,VER_FRA
             BR 10
 
-* BUSQUEDA DEL DENOMINADOR COMUN
+* BUSQUEDA DEL DENOMINADOR COMUN **********************************************
+
 * ME GUARDO DENOMINADOR 1
 C_DENCOM    ZAP _DEN1,DEN1
 
@@ -300,6 +312,8 @@ SIGO        ZAP _DEN_COM,DEN_COM
             MP NUM2,DEN_COM(2)
 
             BR 11
+
+* VER EXPRESION DECIMAL DE UNA FRACCION ***************************************
 
 EXP_DEC     WTOR 'Ingrese el NRO de la fraccion: ',NROC,,WAITECB
             WAIT ECB=WAITECB
@@ -373,6 +387,8 @@ COMP_CER    MVC 0(1,7),=C'0'
 VER_EXPD    WTO 'Expresion Decimal: '
             WTO MF=(E,EXPDEC-4)
             BR 10
+
+* APROXIMACION FRACCIONARIA DE UN NUMERO PERIODICO ****************************
 
 EXP_FRA     WTOR 'Ingrese parte entera: ',ENTEROC,,WAITECB
             WAIT ECB=WAITECB
