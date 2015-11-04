@@ -560,8 +560,11 @@ ING_PER     WTOR 'Ingrese periodo: ',PERIODOC,,WAITECB
             ZAP C1,=P'4'
             ZAP C2,=P'4'
 
+* EN R9, NUMERADOR APROX FRACCIONARIA
 AVANZO0     CLI 0(7),C'0'
             BNE AVANZO1
+            CP C1,=P'0'
+            BE AVANZO1
 
             MVC 0(1,9),=C'0'
             LA 9,1(9)
@@ -593,7 +596,7 @@ AVANZO2     ZAP DOBLE,C1
             AR 12,5
             AR 12,11
 
-* SI # DIGITOS NO PERIODICOS ES CERO, SIGO
+* SI # DIGITOS NO PERIODICOS ES CERO, SIGO (NO TENGO ANTEPERIODO)
             C 4,=F'0'
             BE AVANZO4
 
@@ -602,12 +605,13 @@ AVANZO3     MVC 0(1,9),0(7)
             LA 7,1(7)
             BCT 4,AVANZO3
 
+* COPIO PERIODO
 AVANZO4     MVC 0(1,9),0(8)
             LA 9,1(9)
             LA 8,1(8)
             BCT 6,AVANZO4
 
-* EN NUMP, NUMERADOR EXP FRACCIONARIA
+* EN NUMP, NUMERADOR APROX FRACCIONARIA
             PACK NUMP,A_EXPFRA
 * RESTO ANTEPERIODO
             SP NUMP,ANTEPERP
@@ -661,7 +665,7 @@ AVANZO8     MVC 0(1,8),0(7)
             MVZ RES_SUM,=X'FFFFFFFF'
             WTO MF=(E,RES_SUM-4)
 
-            WTO '-------'
+            WTO '--------'
 
             UNPK RES_SUM,_DEN_COM
             MVZ RES_SUM,=X'FFFFFFFF'
