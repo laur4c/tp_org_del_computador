@@ -442,6 +442,11 @@ EXP_DEC     WTOR 'Ingrese el NRO de la fraccion: ',NROC,,WAITECB
 
             PACK NUM1,NROC
             SP NUM1,=P'1'
+
+* GUARDO EN R4 EL NRO DE FRACCION -1
+            ZAP DOBLE,NUM1
+            CVB 4,DOBLE
+
             MP NUM1,=P'8'
 
             ZAP DOBLE,NUM1
@@ -460,6 +465,8 @@ EXP_DEC     WTOR 'Ingrese el NRO de la fraccion: ',NROC,,WAITECB
 
 * CARGO EN R7 LA EXP DEC DE LA FRACCION
             LA 7,EXPDEC
+            MVI 0(7),C'0'
+            LA 7,1(7)
 
             UNPK NRO,DIVIDEN(4)
             MVZ NRO,=X'FFFFFFFF'
@@ -506,7 +513,16 @@ AG_CEROS    MVC 0(1,7),=C'0'
             A 7,=F'1'
             BCT 9,AG_CEROS
 
-VER_EXPD    WTO 'Expresion Decimal: '
+VER_EXPD    LA 6,VEC_SIG
+            AR 6,4
+
+            CLI 0(6),C'1'
+            BNE IMPRIMIR
+
+            LA 7,EXPDEC
+            MVI 0(7),C'-'
+
+IMPRIMIR    WTO 'Expresion Decimal: '
             WTO MF=(E,EXPDEC-4)
             BR 10
 
@@ -670,9 +686,9 @@ PERIODOC DS CL4
 C1 DS P
 C2 DS P
 
-    DC H'14'
+    DC H'15'
     DC H'0'
-EXPDEC DS CL10
+EXPDEC DS CL11
 
 NRO DS CL4
 NUMC DS CL4
