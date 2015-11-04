@@ -2,6 +2,10 @@ PGM     SUBENTRY BASES=(3)
 
         WTO 'MANEJO DE FRACCIONES'
         WTO 'Puede cargar hasta 10 fracciones.'
+        WTO 'Ejemplos de carga de numerador: '
+        WTO '+0034 -0002 +0001'
+        WTO 'El denominador se ingresa igual, sin el signo.'
+
         LA 5,VEC
         LA 6,VEC_SIG
 
