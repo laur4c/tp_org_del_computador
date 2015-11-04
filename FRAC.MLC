@@ -3,6 +3,7 @@ PGM     SUBENTRY BASES=(3)
         WTO 'MANEJO DE FRACCIONES'
         WTO 'Puede cargar hasta 10 fracciones.'
         LA 5,VEC
+        LA 6,VEC_SIG
 
 OTRO    CP TOTAL,=P'10'
         BL ING
@@ -102,7 +103,18 @@ ING_FRAC    WTOR 'Ingrese el numerador por favor: ',VNUMC,,WAITECB
 
 * AGREGAR FRACCION AL VECTOR **************************************************
 
-AGREGAR     MVC 0(4,5),VNUMC
+AGREGAR     CLI VNUMC,C'-'
+            BE NEGATIVO
+
+* GUARDO CERO EN EL VECTOR DE SIGNOS SI EL NRO ES POSITIVO
+            MVC 0(1,6),=C'0'
+            B GUARDAR
+
+NEGATIVO    MVC 0(1,6),=C'1'
+
+GUARDAR     LA 6,1(6)
+
+            MVC 0(4,5),VNUMC+1
             A 5,=F'4'
 
             MVC 0(4,5),VDENC
@@ -117,23 +129,37 @@ CONTINUA    WTOR 'S para ingresar otra fraccion: ',CONT,,WAITECB
 * VER FRACCIONES INGRESADAS ***************************************************
 
 VER_FRA     LA 5,VEC
+            LA 7,VEC_SIG
+
 * NRO DE FRACCION, EMPIEZO EN 1
             L 6,=F'1'
 
 SIGO4       CVD 6,NUMP
-            UNPK VNUMC,NUMP
-            MVZ VNUMC,=X'FFFFFFFF'
+            UNPK NUMC,NUMP
+            MVZ NUMC,=X'FFFFFFFF'
 
-            MVC NUM(1),VNUMC+3
+            MVC NUM(1),NUMC+3
             MVC NUM+1(1),=C'.'
-            MVC NUM+2(4),0(5)
-            MVZ NUM+2(4),=X'FFFFFFFFFF'
-            MVC NUM+6(1),=C'/'
+
+* CHEQUEO SIGNO
+            CLI 0(7),C'1'
+            BE AG_SIGNO
+
+            MVC NUM+2(1),=C'+'
+            B AG_NRO
+
+AG_SIGNO    MVC NUM+2(1),=C'-'
+
+AG_NRO      LA 7,1(7) AVANZO EN EL VECTOR DE SIGNOS
+
+            MVC NUM+3(4),0(5)
+            MVZ NUM+3(4),=X'FFFFFFFFFF'
+            MVC NUM+7(1),=C'/'
 
             A 5,=F'4'
 
-            MVC NUM+7(4),0(5)
-            MVZ NUM+7(4),=X'FFFFFFFFFF'
+            MVC NUM+8(4),0(5)
+            MVZ NUM+8(4),=X'FFFFFFFFFF'
 
             A 5,=F'4'
 
@@ -156,17 +182,45 @@ VALIDAR     MVI ESVALID,C'S'
 * CALCULAR SUMA DE FRACCIONES *************************************************
 
 CALC_SUM    LA 5,VEC
+            LA 6,VEC_SIG
 
             CP TOTAL,=P'1'
             BE FIN_CALC
 
             PACK NUM1,0(4,5)
+
+            CLI 0(6),C'1'
+            BNE POSITIV1
+* NOT(R4) + 1
+            ZAP DOBLE,NUM1
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP NUM1,DOBLE
+
+POSITIV1    LA 6,1(6)
             A 5,=F'4'
+
             PACK DEN1,0(4,5)
             A 5,=F'4'
 
 CICLO1      PACK NUM2,0(4,5)
+
+            CLI 0(6),C'1'
+            BNE POSITIV2
+
+* NOT(R4) + 1
+            ZAP DOBLE,NUM2
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP NUM2,DOBLE
+
+POSITIV2    LA 6,1(6)
             A 5,=F'4'
+
             PACK DEN2,0(4,5)
             A 5,=F'4'
 
@@ -187,9 +241,15 @@ VER_RES     WTO 'Suma: '
 
             UNPK RES_SUM,SUM_NUM
             MVZ RES_SUM,=X'FFFFFFFF'
-            WTO MF=(E,RES_SUM-4)
 
-            WTO '-------'
+            CP SUM_NUM,=P'0'
+            BH VER_NUM
+
+            MVI RES_SUM,C'-'
+
+VER_NUM     WTO MF=(E,RES_SUM-4)
+
+            WTO '--------'
 
             UNPK RES_SUM,SUM_DEN
             MVZ RES_SUM,=X'FFFFFFFF'
@@ -206,16 +266,38 @@ ORD_DES     CP TOTAL,=P'1'
             CVB 6,DOBLE
 
 CICLO5      LA 5,VEC
+            LA 9,VEC_SIG
 
             ZAP DOBLE,TOTAL
             SP DOBLE,=P'1'
             CVB 7,DOBLE
 
 CICLO6      PACK NUM1,0(4,5)
-            PACK DEN1,4(4,5)
+
+            CLI 0(9),C'1'
+            BNE POSITIV3
+* NOT(R4) + 1
+            ZAP DOBLE,NUM1
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP NUM1,DOBLE
+
+POSITIV3    PACK DEN1,4(4,5)
 
             PACK NUM2,8(4,5)
-            PACK DEN2,12(4,5)
+            CLI 1(9),C'1'
+            BNE POSITIV4
+* NOT(R4) + 1
+            ZAP DOBLE,NUM2
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP NUM2,DOBLE
+
+POSITIV4    PACK DEN2,12(4,5)
 
 * BUSCO DENOMINADOR COMUN, PARA LUEGO COMPARAR LOS NUMERADORES
             BAL 11,C_DENCOM
@@ -228,8 +310,13 @@ CICLO6      PACK NUM1,0(4,5)
             MVC AUX1,8(5)
             MVC 8(8,5),0(5)
             MVC 0(8,5),AUX1
+* CAMBIO POSICION SIGNO
+            MVC AUX2,1(9)
+            MVC 1(1,9),0(9)
+            MVC 0(1,9),AUX2
 
 SIGO3       A 5,=F'8'
+            A 9,=F'1'
 
             BCT 7,CICLO6
             BCT 6,CICLO5
@@ -246,16 +333,39 @@ ORD_ASC     CP TOTAL,=P'1'
             CVB 6,DOBLE
 
 CICLO2      LA 5,VEC
+            LA 9,VEC_SIG
 
             ZAP DOBLE,TOTAL
             SP DOBLE,=P'1'
             CVB 7,DOBLE
 
 CICLO3      PACK NUM1,0(4,5)
-            PACK DEN1,4(4,5)
+
+            CLI 0(9),C'1'
+            BNE POSITIV5
+* NOT(R4) + 1
+            ZAP DOBLE,NUM1
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP NUM1,DOBLE
+
+POSITIV5    PACK DEN1,4(4,5)
 
             PACK NUM2,8(4,5)
-            PACK DEN2,12(4,5)
+
+            CLI 1(9),C'1'
+            BNE POSITIV6
+* NOT(R4) + 1
+            ZAP DOBLE,NUM2
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP NUM2,DOBLE
+
+POSITIV6    PACK DEN2,12(4,5)
 
 * BUSCO DENOMINADOR COMUN, PARA LUEGO COMPARAR LOS NUMERADORES
             BAL 11,C_DENCOM
@@ -268,8 +378,13 @@ CICLO3      PACK NUM1,0(4,5)
             MVC AUX1,8(5)
             MVC 8(8,5),0(5)
             MVC 0(8,5),AUX1
+* CAMBIO POSICION SIGNO
+            MVC AUX2,1(9)
+            MVC 1(1,9),0(9)
+            MVC 0(1,9),AUX2
 
 SIGO2       A 5,=F'8'
+            A 9,=F'1'
 
             BCT 7,CICLO3
             BCT 6,CICLO2
@@ -560,24 +675,26 @@ C2 DS P
 EXPDEC DS CL10
 
 NRO DS CL4
+NUMC DS CL4
 NROC DS C
 NUMP DS PL8
 DENP DS PL8
-    DC H'15'
+    DC H'16'
     DC H'0'
-NUM DS CL11
+NUM DS CL12
 
 AUX1 DS CL8
+AUX2 DS C
 
 SUM_NUM DC PL4'0'
 SUM_DEN DC PL4'0'
 DIVIDEN DS PL8
 
-    DC H'11'
+    DC H'12'
     DC H'0'
-RES_SUM DS CL7
+RES_SUM DS CL8
 
-VNUMC DS CL4
+VNUMC DS CL5
 VDENC DS CL4
 WAITECB DC F'0'
 
@@ -593,6 +710,7 @@ NUM2 DS PL4
     DC H'88'
     DC H'0'
 VEC DC 21CL4'0'
+VEC_SIG DS 10CL4
 
 MSJ_MAX DC CL40'Puede ingresar solo 10 fracciones.'
 
