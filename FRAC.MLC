@@ -233,13 +233,37 @@ POSITIV2    LA 6,1(6)
             AP NUM1,NUM2
 
             ZAP SUM_NUM,NUM1
-            ZAP SUM_DEN,_DEN_COM
+            ZAP SUM_DEN,DEN_COM
 
             ZAP NUM1,SUM_NUM
             ZAP DEN1,SUM_DEN
 
             CLI 0(5),C'*'
             BNE CICLO1
+
+            ZAP _A_,SUM_NUM
+            ZAP _B_,SUM_DEN
+
+            CP _A_,=P'0'
+            BH CALC_MCD
+
+* PORQUE MCD RECIBE DOS ENTEROS POSITIVOS
+            ZAP DOBLE,_A_
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP _A_,DOBLE
+
+CALC_MCD    BAL 11,MCD
+
+            ZAP DIVIDEN,SUM_NUM
+            DP DIVIDEN,_B_
+            ZAP SUM_NUM,DIVIDEN(4)
+
+            ZAP DIVIDEN,SUM_DEN
+            DP DIVIDEN,_B_
+            ZAP SUM_DEN,DIVIDEN(4)
 
 VER_RES     WTO 'Suma: '
 
@@ -395,49 +419,6 @@ SIGO2       A 5,=F'8'
 
 FIN_ORDA    BAL 11,VER_FRA
             BR 10
-
-* BUSQUEDA DEL DENOMINADOR COMUN **********************************************
-
-* ME GUARDO DENOMINADOR 1
-C_DENCOM    ZAP _DEN1,DEN1
-
-* BUSCO EL MAYOR DENOMINADOR
-            SP DEN1,DEN2
-* DEN1 = DEN1 - DEN2
-            CP DEN1,=P'0'
-            BL DEN1_MEN
-* SI DEN1 MAYOR
-            ZAP DIVIDEN,_DEN1
-            DP DIVIDEN,DEN2
-            CP DIVIDEN+4(4),=P'0'
-            BNE MULT_DEN
-
-            ZAP DEN_COM,_DEN1
-            B SIGO
-
-* SI DEN1 MENOR
-DEN1_MEN    ZAP DIVIDEN,DEN2
-            DP DIVIDEN,_DEN1
-            CP DIVIDEN+4(4),=P'0'
-            BNE MULT_DEN
-
-            ZAP DEN_COM,DEN2
-            B SIGO
-
-* NO SON MULTIPLOS, BUSCO COM DEN CON: DEN1 * DEN2
-MULT_DEN    ZAP DEN1,_DEN1
-            MP DEN1,DEN2
-            ZAP DEN_COM,DEN1
-
-SIGO        ZAP _DEN_COM,DEN_COM
-            DP DEN_COM,_DEN1
-            MP NUM1,DEN_COM(4)
-
-            ZAP DEN_COM,_DEN_COM
-            DP DEN_COM,DEN2
-            MP NUM2,DEN_COM(4)
-
-            BR 11
 
 * VER EXPRESION DECIMAL DE UNA FRACCION ***************************************
 
@@ -671,13 +652,74 @@ AVANZO8     MVC 0(1,8),0(7)
 
             WTO '--------'
 
-            UNPK RES_SUM,_DEN_COM
+            UNPK RES_SUM,DEN_COM
             MVZ RES_SUM,=X'FFFFFFFF'
             WTO MF=(E,RES_SUM-4)
 
             BR 10
 
+* BUSQUEDA DEL DENOMINADOR COMUN **********************************************
+
+* ME GUARDO DENOMINADOR 1
+C_DENCOM    ZAP _DEN1,DEN1
+
+* BUSCO EL MAYOR DENOMINADOR
+            SP DEN1,DEN2
+* DEN1 = DEN1 - DEN2
+            CP DEN1,=P'0'
+            BL DEN1_MEN
+* SI DEN1 MAYOR
+            ZAP DIVIDEN,_DEN1
+            DP DIVIDEN,DEN2
+            CP DIVIDEN+4(4),=P'0'
+            BNE MULT_DEN
+
+            ZAP DEN_COM,_DEN1
+            B SIGO
+
+* SI DEN1 MENOR
+DEN1_MEN    ZAP DIVIDEN,DEN2
+            DP DIVIDEN,_DEN1
+            CP DIVIDEN+4(4),=P'0'
+            BNE MULT_DEN
+
+            ZAP DEN_COM,DEN2
+            B SIGO
+
+* NO SON MULTIPLOS, BUSCO COM DEN CON: DEN1 * DEN2
+MULT_DEN    ZAP DEN1,_DEN1
+            MP DEN1,DEN2
+            ZAP DEN_COM,DEN1
+
+SIGO        ZAP _DEN_COM,DEN_COM
+            DP DEN_COM,_DEN1
+            MP NUM1,DEN_COM(4)
+
+            ZAP DEN_COM,_DEN_COM
+            DP DEN_COM,DEN2
+            MP NUM2,DEN_COM(4)
+
+            ZAP DEN_COM,_DEN_COM
+            BR 11
+
+* MAXIMO COMUN DIVISOR, SE USA EL ALGORITMO DE EUCLIDES
+* RECIBE DOS PARAMETROS _A_ Y _B_
+* EL MCD QUEDA EN _B_
+MCD         ZAP DIVIDEN,_A_
+            DP DIVIDEN,_B_
+
+            CP DIVIDEN+4(4),=P'0'
+            BE FIN_MCD
+
+            ZAP _A_,_B_
+            ZAP _B_,DIVIDEN+4(4)
+            B MCD
+
+FIN_MCD     BR 11
+
 * VARIABLES **********************************************************
+_A_ DS PL4
+_B_ DS PL4
 
 A_EXPFRA DS CL8
 B_EXPFRA DS CL8
