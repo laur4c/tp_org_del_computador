@@ -1,3 +1,10 @@
+*******************************************************************************
+* IBM MAINFRAME - MANEJO DE FRACCIONES                                        *
+*                                                                             *
+*                                                                             *
+* https://github.com/laur4c/tp_org_del_computador/blob/master/FRAC.MLC        *
+*******************************************************************************
+
 PGM     SUBENTRY BASES=(3)
 
         WTO 'MANEJO DE FRACCIONES'

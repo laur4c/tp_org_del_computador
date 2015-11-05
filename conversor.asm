@@ -4,9 +4,7 @@
 ;## numeros enteros en base 10 o base 8 y permita hacer la conversion a esas
 ;## mismas bases.
 ;##
-;##
-;## * falta validar que el numero ingresado este en la base correcta
-;## * preguntar como debuguear cuando espero input x teclado
+;## https://github.com/laur4c/tp_org_del_computador/
 ;##############################################################################
 
 segment pila stack
