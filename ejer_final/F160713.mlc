@@ -1,0 +1,108 @@
+* 2) [3 ptos] Codificar una rutina interna en assembler IBM Mainframe que reciba
+* los siguientes 3 parámetros:
+* a. [Entrada] Dos números en base 4 de 4 dígitos cada uno en formato carácter
+* EBCDIC
+* b. [Salida] Un campo resultado en donde la rutina deberá devolver la suma de
+* los dos números en base 4 como otro número en base 4 en formato EBCDIC. 
+
+F160713   SUBENTRY BASES=(3)
+          
+          BAL 10,SUMAR
+          
+          SUBEXIT
+          
+SUMAR 	  LA 9,NUM1C
+		  BAL 12,CAD_NUM
+		  
+		  L 5,NUM
+		  ST 5,RESULT1
+		  
+		  LA 9,NUM2C
+		  BAL 12,CAD_NUM
+		 
+		  L 5,NUM
+		  A 5,RESULT1
+		  ST 5,RESULT1
+		  
+		  LA 4,RESULT2
+		  
+		  LA 5,4
+		  L 7,RESULT1
+		  
+		  LA 6,0
+		  SLDL 6,24
+		  
+CICLO2	  LA 6,0
+		  SLDL 6,2
+		  
+* ESTA ENTRE 0 -9 
+		  STC 6,0(4)
+		  OI 0(4),X'F0'
+		  B PROX
+
+ERR	      WTO 'ERROR'
+		  
+PROX	  LA 4,1(4)
+		  BCT 5,CICLO2
+		 
+		  BR 10
+		  
+CAD_NUM   L 7,=F'0'
+		  ST 7,NUM
+		  
+		  LA 7,4
+		  
+CICLO	  L 8,0
+		  IC 8,0(9)
+		  
+		  CLI 0(9),X'F0'
+		  BL INVAL
+		  
+		  CLI 0(9),X'F3'
+		  BH INVAL
+		  
+		  S 8,=X'000000F0'
+		  B SIGO
+		  
+INVAL	  WTO 'NO ES NRO EN BASE 4'
+ 		  B SIGO1
+ 		  
+SIGO      LR 11,7
+
+		  C 11,=F'2'
+ 		  BE ES_UNO
+ 		  
+ 		  C 11,=F'1'
+ 		  BE ES_CERO
+
+		  S 11,=F'2'
+ 		  L 5,=F'4'
+ 		  
+MULTIP	  M 4,=F'4'
+ 		  BCT 11,MULTIP
+ 		  B SUM
+ 
+ES_UNO    L 5,=F'4'
+		  B SUM
+		 
+ES_CERO   L 5,=F'1'
+		  
+SUM		  MR 4,8
+ 		  
+ 		  A 5,NUM
+ 		  ST 5,NUM
+ 		  
+SIGO1	  LA 9,1(9)
+		  BCT 7,CICLO
+		  BR 12
+		  
+NUM DC F'0'
+	
+RESULT1 DS F
+RESULT2 DS CL4
+
+NUM1C DC CL4'0031'	  
+NUM2C DC CL4'0022'
+
+          END
+

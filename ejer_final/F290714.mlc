@@ -1,0 +1,49 @@
+* Codificar una rutina interna en assembler IBM Mainframe que dado
+* un string (cadena de caracteres terminados con un byte en X?00?) y un car?cter;
+* devuelva en un vector de salida las direcciones de memoria de donde se
+* encuentre dicho car?cter dentro del string.
+* STRING DS F *Contiene la direcci?n de inicio del string.
+* CHAR DS C *Contiene el car?cter a buscar dentro del string.
+* VECSAL DS 256F *Vector de salida que contendr? las direcciones de memoria.
+* Finaliza con una direcci?n con valor -1. 
+
+
+F290714   SUBENTRY
+          WTO   'EJERCICIO DE FINAL'
+          
+		  BAL 10,CARGAR 
+		            
+          SUBEXIT
+          
+CARGAR	  L 5,STRING
+	      LA 4,VECTOR
+		  
+CICLO 	  CLI 0(5),X'00'
+		  BE FIN
+		  
+		  CLC 0(1,5),CHAR
+		  BNE SIGO
+		  
+		  ST 5,0(4)
+		  
+		  LA 4,4(4)
+		  
+SIGO	  LA 5,1(5)
+		  B CICLO
+		  
+FIN 	  L 6,=F'-1'
+		  ST 6,0(4)
+		  
+		  BR 10          
+CADENA DC       C'MANIAFFFDRA2AA'
+       DC       X'00'
+       
+* STRING DS F DIR INICIO DE STRING
+STRING DC A(CADENA)
+
+
+
+CHAR DC C'A'  CARACTER A BUSCAR
+VECTOR DS 256F   
+          
+          END

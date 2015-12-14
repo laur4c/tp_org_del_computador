@@ -1,0 +1,804 @@
+*******************************************************************************
+* IBM MAINFRAME - MANEJO DE FRACCIONES                                        *
+*                                                                             *
+*                                                                             *
+* https://github.com/laur4c/tp_org_del_computador/blob/master/FRAC.MLC        *
+*******************************************************************************
+
+PGM     SUBENTRY BASES=(3)
+
+        WTO 'MANEJO DE FRACCIONES'
+        WTO 'Puede cargar hasta 10 fracciones.'
+        WTO 'Ejemplos de carga de numerador: '
+        WTO '+0034 -0002 +0001'
+        WTO 'El denominador se ingresa igual, sin el signo.'
+
+        LA 5,VEC
+        LA 6,VEC_SIG
+
+OTRO    CP TOTAL,=P'10'
+        BL ING
+
+        MVC MSJ,MSJ_MAX
+        BAL 10,VER_MSJ
+
+        B MAR_FIN
+
+ING     BAL 10,ING_FRAC
+
+        BAL 10,VALIDAR
+        CLI ESVALID,C'S'
+        BNE OTRO
+
+        BAL 10,AGREGAR
+        AP TOTAL,=P'1'
+
+        BAL 10,CONTINUA
+        CLI CONT,C'S'
+        BE OTRO
+
+MAR_FIN MVC 0(1,5),=C'*'
+
+        WTO 'Fracciones Ingresadas: '
+        BAL 10,VER_FRA
+
+MENU    BAL 10,VER_MENU
+
+        CP OPC,=P'1'
+        BNE ES_OPC2
+
+        BAL 10,CALC_SUM
+        B MENU
+
+ES_OPC2 CP OPC,=P'2'
+        BNE ES_OPC3
+
+        BAL 10,ORD_DES
+        B MENU
+
+ES_OPC3 CP OPC,=P'3'
+        BNE ES_OPC4
+
+        BAL 10,ORD_ASC
+        B MENU
+
+ES_OPC4 CP OPC,=P'4'
+        BNE ES_OPC5
+
+        BAL 10,EXP_DEC
+        B MENU
+
+ES_OPC5 CP OPC,=P'5'
+        BNE ES_OPC6
+
+        BAL 10,EXP_FRA
+        B MENU
+
+ES_OPC6 CP OPC,=P'6'
+        BNE ES_OPC7
+
+        BAL 10,VER_FRA
+
+ES_OPC7 CP OPC,=P'7'
+        BNE MENU
+
+        SUBEXIT
+
+
+* RUTINAS *********************************************************************
+
+VER_MENU    WTO ' '
+            WTO 'Operaciones disponibles: '
+            WTO '1. Calcular suma de las fracciones.'
+            WTO '2. Ordenar de mayor a menor.'
+            WTO '3. Ordenar de menor a mayor.'
+            WTO '4. Ver expresion decimal de una  fraccion.'
+            WTO '5. Ver forma fraccionaria de un numero periodico.'
+            WTO '6. Ver fracciones ingresadas.'
+            WTO '7. Salir'
+
+            WTOR 'Por favor, ingrese una opcion: ',OPCC,,WAITECB
+            WAIT ECB=WAITECB
+
+            PACK OPC,OPCC
+            BR 10
+
+* INGRESO FRACCION ************************************************************
+
+ING_FRAC    WTOR 'Ingrese el numerador por favor: ',VNUMC,,WAITECB
+            WAIT ECB=WAITECB
+
+            WTOR 'Ahora, ingrese el denominador: ',VDENC,,WAITECB
+            WAIT ECB=WAITECB
+            BR 10
+
+* AGREGAR FRACCION AL VECTOR **************************************************
+
+AGREGAR     CLI VNUMC,C'-'
+            BE NEGATIVO
+
+* GUARDO CERO EN EL VECTOR DE SIGNOS SI EL NRO ES POSITIVO
+            MVC 0(1,6),=C'0'
+            B GUARDAR
+
+NEGATIVO    MVC 0(1,6),=C'1'
+
+GUARDAR     LA 6,1(6)
+
+            MVC 0(4,5),VNUMC+1
+            A 5,=F'4'
+
+            MVC 0(4,5),VDENC
+            A 5,=F'4'
+
+            BR 10
+
+CONTINUA    WTOR 'S para ingresar otra fraccion: ',CONT,,WAITECB
+            WAIT ECB=WAITECB
+            BR 10
+
+* VER FRACCIONES INGRESADAS ***************************************************
+
+VER_FRA     LA 5,VEC
+            LA 7,VEC_SIG
+
+* NRO DE FRACCION, EMPIEZO EN 1
+            L 6,=F'1'
+
+SIGO4       CVD 6,NUMP
+            UNPK NUMC,NUMP
+            MVZ NUMC,=X'FFFFFFFF'
+
+            MVC NUM(1),NUMC+3
+            MVC NUM+1(1),=C'.'
+
+* CHEQUEO SIGNO
+            CLI 0(7),C'1'
+            BE AG_SIGNO
+
+            MVC NUM+2(1),=C'+'
+            B AG_NRO
+
+AG_SIGNO    MVC NUM+2(1),=C'-'
+
+AG_NRO      LA 7,1(7) AVANZO EN EL VECTOR DE SIGNOS
+
+            MVC NUM+3(4),0(5)
+            MVZ NUM+3(4),=X'FFFFFFFFFF'
+            MVC NUM+7(1),=C'/'
+
+            A 5,=F'4'
+
+            MVC NUM+8(4),0(5)
+            MVZ NUM+8(4),=X'FFFFFFFFFF'
+
+            A 5,=F'4'
+
+            WTO MF=(E,NUM-4)
+
+* SUMO UNO AL CONTADOR DE FRACCIONES
+            A 6,=F'1'
+
+            CLI 0(5),C'*'
+            BNE SIGO4
+
+            BR 10
+
+VER_MSJ     WTO MF=(E,MSJ-4)
+            BR 10
+
+VALIDAR     MVI ESVALID,C'S'
+            BR 10
+
+* CALCULAR SUMA DE FRACCIONES *************************************************
+
+CALC_SUM    LA 5,VEC
+            LA 6,VEC_SIG
+
+            CP TOTAL,=P'1'
+            BE FIN_CALC
+
+            PACK NUM1,0(4,5)
+
+            CLI 0(6),C'1'
+            BNE POSITIV1
+* NOT(R4) + 1
+            ZAP DOBLE,NUM1
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP NUM1,DOBLE
+
+POSITIV1    LA 6,1(6)
+            A 5,=F'4'
+
+            PACK DEN1,0(4,5)
+            A 5,=F'4'
+
+CICLO1      PACK NUM2,0(4,5)
+
+            CLI 0(6),C'1'
+            BNE POSITIV2
+
+* NOT(R4) + 1
+            ZAP DOBLE,NUM2
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP NUM2,DOBLE
+
+POSITIV2    LA 6,1(6)
+            A 5,=F'4'
+
+            PACK DEN2,0(4,5)
+            A 5,=F'4'
+
+            BAL 11,C_DENCOM
+
+            AP NUM1,NUM2
+
+            ZAP SUM_NUM,NUM1
+            ZAP SUM_DEN,DEN_COM
+
+            ZAP NUM1,SUM_NUM
+            ZAP DEN1,SUM_DEN
+
+            CLI 0(5),C'*'
+            BNE CICLO1
+
+            ZAP _A_,SUM_NUM
+            ZAP _B_,SUM_DEN
+
+            CP _A_,=P'0'
+            BH CALC_MCD
+
+* PORQUE MCD RECIBE DOS ENTEROS POSITIVOS
+            ZAP DOBLE,_A_
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP _A_,DOBLE
+
+CALC_MCD    BAL 11,MCD
+
+            ZAP DIVIDEN,SUM_NUM
+            DP DIVIDEN,_B_
+            ZAP SUM_NUM,DIVIDEN(4)
+
+            ZAP DIVIDEN,SUM_DEN
+            DP DIVIDEN,_B_
+            ZAP SUM_DEN,DIVIDEN(4)
+
+VER_RES     WTO 'Suma: '
+
+            UNPK RES_SUM,SUM_NUM
+            MVZ RES_SUM,=X'FFFFFFFF'
+
+            CP SUM_NUM,=P'0'
+            BH VER_NUM
+
+            MVI RES_SUM,C'-'
+
+VER_NUM     WTO MF=(E,RES_SUM-4)
+
+            WTO '--------'
+
+            UNPK RES_SUM,SUM_DEN
+            MVZ RES_SUM,=X'FFFFFFFF'
+            WTO MF=(E,RES_SUM-4)
+
+FIN_CALC    BR 10
+
+* ORDEN DESCENDIENTE **********************************************************
+
+ORD_DES     CP TOTAL,=P'1'
+            BE FIN_ORDD
+
+            ZAP DOBLE,TOTAL
+            CVB 6,DOBLE
+
+CICLO5      LA 5,VEC
+            LA 9,VEC_SIG
+
+            ZAP DOBLE,TOTAL
+            SP DOBLE,=P'1'
+            CVB 7,DOBLE
+
+CICLO6      PACK NUM1,0(4,5)
+
+            CLI 0(9),C'1'
+            BNE POSITIV3
+* NOT(R4) + 1
+            ZAP DOBLE,NUM1
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP NUM1,DOBLE
+
+POSITIV3    PACK DEN1,4(4,5)
+
+            PACK NUM2,8(4,5)
+            CLI 1(9),C'1'
+            BNE POSITIV4
+* NOT(R4) + 1
+            ZAP DOBLE,NUM2
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP NUM2,DOBLE
+
+POSITIV4    PACK DEN2,12(4,5)
+
+* BUSCO DENOMINADOR COMUN, PARA LUEGO COMPARAR LOS NUMERADORES
+            BAL 11,C_DENCOM
+
+            SP NUM1,NUM2
+            CP NUM1,=P'0'
+            BH SIGO3
+
+* CAMBIO DE POSICION
+            MVC AUX1,8(5)
+            MVC 8(8,5),0(5)
+            MVC 0(8,5),AUX1
+* CAMBIO POSICION SIGNO
+            MVC AUX2,1(9)
+            MVC 1(1,9),0(9)
+            MVC 0(1,9),AUX2
+
+SIGO3       A 5,=F'8'
+            A 9,=F'1'
+
+            BCT 7,CICLO6
+            BCT 6,CICLO5
+
+FIN_ORDD    BAL 11,VER_FRA
+            BR 10
+
+* ORDEN ASCENDIENTE ***********************************************************
+
+ORD_ASC     CP TOTAL,=P'1'
+            BE FIN_ORDA
+
+            ZAP DOBLE,TOTAL
+            CVB 6,DOBLE
+
+CICLO2      LA 5,VEC
+            LA 9,VEC_SIG
+
+            ZAP DOBLE,TOTAL
+            SP DOBLE,=P'1'
+            CVB 7,DOBLE
+
+CICLO3      PACK NUM1,0(4,5)
+
+            CLI 0(9),C'1'
+            BNE POSITIV5
+* NOT(R4) + 1
+            ZAP DOBLE,NUM1
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP NUM1,DOBLE
+
+POSITIV5    PACK DEN1,4(4,5)
+
+            PACK NUM2,8(4,5)
+
+            CLI 1(9),C'1'
+            BNE POSITIV6
+* NOT(R4) + 1
+            ZAP DOBLE,NUM2
+            CVB 4,DOBLE
+            X 4,=F'-1'
+            A 4,=F'1'
+            CVD 4,DOBLE
+            ZAP NUM2,DOBLE
+
+POSITIV6    PACK DEN2,12(4,5)
+
+* BUSCO DENOMINADOR COMUN, PARA LUEGO COMPARAR LOS NUMERADORES
+            BAL 11,C_DENCOM
+
+            SP NUM1,NUM2
+            CP NUM1,=P'0'
+            BL SIGO2
+
+* CAMBIO DE POSICION
+            MVC AUX1,8(5)
+            MVC 8(8,5),0(5)
+            MVC 0(8,5),AUX1
+* CAMBIO POSICION SIGNO
+            MVC AUX2,1(9)
+            MVC 1(1,9),0(9)
+            MVC 0(1,9),AUX2
+
+SIGO2       A 5,=F'8'
+            A 9,=F'1'
+
+            BCT 7,CICLO3
+            BCT 6,CICLO2
+
+FIN_ORDA    BAL 11,VER_FRA
+            BR 10
+
+* VER EXPRESION DECIMAL DE UNA FRACCION ***************************************
+
+EXP_DEC     WTOR 'Ingrese el NRO de la fraccion: ',NROC,,WAITECB
+            WAIT ECB=WAITECB
+
+            PACK NUM1,NROC
+            SP NUM1,=P'1'
+
+* GUARDO EN R4 EL NRO DE FRACCION -1
+            ZAP DOBLE,NUM1
+            CVB 4,DOBLE
+
+            MP NUM1,=P'8'
+
+            ZAP DOBLE,NUM1
+            CVB 6,DOBLE
+* ME POSICIONO EN EL VECTOR
+            LA 5,VEC
+            AR 5,6
+
+* EN NUM1 Y DEN1 TENGO LA FRACCION QUE QUIERO MOSTRAR
+            PACK NUM1,0(4,5)
+            A 5,=F'4'
+            PACK DEN1,0(4,5)
+
+            ZAP DIVIDEN,NUM1
+            DP DIVIDEN,DEN1
+
+* CARGO EN R7 LA EXP DEC DE LA FRACCION
+            LA 7,EXPDEC
+            MVI 0(7),C'0'
+            LA 7,1(7)
+
+            UNPK NRO,DIVIDEN(4)
+            MVZ NRO,=X'FFFFFFFF'
+            MVC 0(4,7),NRO
+            MVC 4(1,7),=C','
+
+            A 7,=F'5'
+            L 6,=F'0'
+
+* CARGO TOTAL DE CARACTERES AGREGADOS DESPUES DE LA COMA
+            L 8,=F'0'
+
+* SI EL RESTO ES CERO, TERMINO COMPLETANDO CON CEROS AL FINAL
+            CP DIVIDEN+4(4),=P'0'
+            BE F_EXPDEC
+
+* HASTA 5 DIGITOS DECIMALES
+            L 6,=F'5'
+            ZAP DIVIDEN,DIVIDEN+4(4)
+
+* MULTIPLICO RESTO POR 10
+CICLO7      MP DIVIDEN,=P'10'
+            DP DIVIDEN,DEN1
+
+            UNPK NROC,DIVIDEN(4)
+            MVZ NROC,=X'FFFFFFFF'
+            MVC 0(1,7),NROC
+            A 7,=F'1'
+            A 8,=F'1'
+
+            CP DIVIDEN+4(4),=P'0'
+            BE F_EXPDEC
+
+            ZAP DIVIDEN,DIVIDEN+4(4)
+
+            BCT 6,CICLO7
+
+F_EXPDEC    L 9,=F'5'
+            SR 9,8
+            C 9,=F'0'
+            BE VER_EXPD
+
+AG_CEROS    MVC 0(1,7),=C'0'
+            A 7,=F'1'
+            BCT 9,AG_CEROS
+
+VER_EXPD    LA 6,VEC_SIG
+            AR 6,4
+
+            CLI 0(6),C'1'
+            BNE IMPRIMIR
+
+            LA 7,EXPDEC
+            MVI 0(7),C'-'
+
+IMPRIMIR    WTO 'Expresion Decimal: '
+            WTO MF=(E,EXPDEC-4)
+            BR 10
+
+* APROXIMACION FRACCIONARIA DE UN NUMERO PERIODICO ****************************
+
+EXP_FRA     WTOR 'Ingrese parte entera: ',ENTEROC,,WAITECB
+            WAIT ECB=WAITECB
+            PACK ENTEROP,ENTEROC
+
+            WTOR 'Tiene anteperiodo? (S si tiene): ',OPCC,,WAITECB
+            WAIT ECB=WAITECB
+
+            CLI OPCC,C'S'
+            BNE INI_ANTE
+
+            WTOR 'Ingrese anteperiodo: ',ANTEPERC,,WAITECB
+            WAIT ECB=WAITECB
+
+            PACK ANTEPERP,ANTEPERC
+            B ING_PER
+
+INI_ANTE    ZAP ANTEPERP,=P'0'
+            MVC ANTEPERC,=C'0000'
+
+ING_PER     WTOR 'Ingrese periodo: ',PERIODOC,,WAITECB
+            WAIT ECB=WAITECB
+
+
+* JUNTO NRO DETRAS DE LA COMA
+            LA 7,ANTEPERC
+            LA 8,PERIODOC
+
+            LA 9,A_EXPFRA
+
+            ZAP C1,=P'4'
+            ZAP C2,=P'4'
+
+* EN R9, NUMERADOR APROX FRACCIONARIA
+AVANZO0     CLI 0(7),C'0'
+            BNE AVANZO1
+            CP C1,=P'0'
+            BE AVANZO1
+
+            MVC 0(1,9),=C'0'
+            LA 9,1(9)
+            LA 7,1(7)
+            SP C1,=P'1'
+
+            B AVANZO0
+
+AVANZO1     CLI 0(8),C'0'
+            BNE AVANZO2
+
+            MVC 0(1,9),=C'0'
+            LA 9,1(9)
+            LA 8,1(8)
+            SP C2,=P'1'
+            B AVANZO1
+
+AVANZO2     ZAP DOBLE,C1
+            CVB 4,DOBLE
+* EN R5 # DIGITOS NO PERIODICOS
+            LR 5,4
+
+* EN R11 # DIGITOS PERIODICOS
+            ZAP DOBLE,C2
+            CVB 6,DOBLE
+            LR 11,6
+
+            L 12,=F'0'
+            AR 12,5
+            AR 12,11
+
+* SI # DIGITOS NO PERIODICOS ES CERO, SIGO (NO TENGO ANTEPERIODO)
+            C 4,=F'0'
+            BE AVANZO4
+
+AVANZO3     MVC 0(1,9),0(7)
+            LA 9,1(9)
+            LA 7,1(7)
+            BCT 4,AVANZO3
+
+* COPIO PERIODO
+AVANZO4     MVC 0(1,9),0(8)
+            LA 9,1(9)
+            LA 8,1(8)
+            BCT 6,AVANZO4
+
+* EN NUMP, NUMERADOR APROX FRACCIONARIA
+            PACK NUMP,A_EXPFRA
+* RESTO ANTEPERIODO
+            SP NUMP,ANTEPERP
+
+            LA 7,B_EXPFRA
+
+* AGREGO 9'S POR C/DIGITO PERIODICO
+AVANZO5     MVC 0(1,7),=C'9'
+            LA 7,1(7)
+            BCT 11,AVANZO5
+
+* AGREGO 0'S POR C/DIGITO NO PERIODICO
+            C 5,=F'0'
+            BE SALTEO
+
+AVANZO6     MVC 0(1,7),=C'0'
+            LA 7,1(7)
+            BCT 5,AVANZO6
+
+SALTEO      L 6,=F'8'
+            SR 6,12
+
+            LA 7,B_EXPFRA
+            LA 8,D_EXPFRA
+
+AVANZO7     MVC 0(1,8),=C'0'
+            LA 8,1(8)
+            BCT 6,AVANZO7
+
+AVANZO8     MVC 0(1,8),0(7)
+            LA 8,1(8)
+            LA 7,1(7)
+            BCT 12,AVANZO8
+
+* EN DENP, DENOMINADOR DE EXP FRACCIONARIA
+            PACK DENP,D_EXPFRA
+
+* RESUELVO PARTE ENTERA + FRACCION
+            ZAP NUM1,NUMP
+            ZAP DEN1,DENP
+
+            ZAP NUM2,ENTEROP
+            ZAP DEN2,=P'01'
+
+            BAL 11,C_DENCOM
+
+            AP NUM1,NUM2
+
+            WTO 'Aproximacion Fraccionaria: '
+            UNPK RES_SUM,NUM1
+            MVZ RES_SUM,=X'FFFFFFFF'
+            WTO MF=(E,RES_SUM-4)
+
+            WTO '--------'
+
+            UNPK RES_SUM,DEN_COM
+            MVZ RES_SUM,=X'FFFFFFFF'
+            WTO MF=(E,RES_SUM-4)
+
+            BR 10
+
+* BUSQUEDA DEL DENOMINADOR COMUN **********************************************
+
+* ME GUARDO DENOMINADOR 1
+C_DENCOM    ZAP _DEN1,DEN1
+
+* BUSCO EL MAYOR DENOMINADOR
+            SP DEN1,DEN2
+* DEN1 = DEN1 - DEN2
+            CP DEN1,=P'0'
+            BL DEN1_MEN
+* SI DEN1 MAYOR
+            ZAP DIVIDEN,_DEN1
+            DP DIVIDEN,DEN2
+            CP DIVIDEN+4(4),=P'0'
+            BNE MULT_DEN
+
+            ZAP DEN_COM,_DEN1
+            B SIGO
+
+* SI DEN1 MENOR
+DEN1_MEN    ZAP DIVIDEN,DEN2
+            DP DIVIDEN,_DEN1
+            CP DIVIDEN+4(4),=P'0'
+            BNE MULT_DEN
+
+            ZAP DEN_COM,DEN2
+            B SIGO
+
+* NO SON MULTIPLOS, BUSCO COM DEN CON: DEN1 * DEN2
+MULT_DEN    ZAP DEN1,_DEN1
+            MP DEN1,DEN2
+            ZAP DEN_COM,DEN1
+
+SIGO        ZAP _DEN_COM,DEN_COM
+            DP DEN_COM,_DEN1
+            MP NUM1,DEN_COM(4)
+
+            ZAP DEN_COM,_DEN_COM
+            DP DEN_COM,DEN2
+            MP NUM2,DEN_COM(4)
+
+            ZAP DEN_COM,_DEN_COM
+            BR 11
+
+* MAXIMO COMUN DIVISOR, SE USA EL ALGORITMO DE EUCLIDES
+* RECIBE DOS PARAMETROS _A_ Y _B_
+* EL MCD QUEDA EN _B_
+MCD         ZAP DIVIDEN,_A_
+            DP DIVIDEN,_B_
+
+            CP DIVIDEN+4(4),=P'0'
+            BE FIN_MCD
+
+            ZAP _A_,_B_
+            ZAP _B_,DIVIDEN+4(4)
+            B MCD
+
+FIN_MCD     BR 11
+
+* VARIABLES **********************************************************
+_A_ DS PL4
+_B_ DS PL4
+
+A_EXPFRA DS CL8
+B_EXPFRA DS CL8
+D_EXPFRA DS CL8
+
+ENTEROP DS PL4
+ENTEROC DS CL4
+
+ANTEPERP DS PL4
+ANTEPERC DS CL4
+
+PERIODOC DS CL4
+
+C1 DS P
+C2 DS P
+
+    DC H'15'
+    DC H'0'
+EXPDEC DS CL11
+
+NRO DS CL4
+NUMC DS CL4
+NROC DS C
+NUMP DS PL8
+DENP DS PL8
+    DC H'16'
+    DC H'0'
+NUM DS CL12
+
+AUX1 DS CL8
+AUX2 DS C
+
+SUM_NUM DC PL4'0'
+SUM_DEN DC PL4'0'
+DIVIDEN DS PL8
+
+    DC H'12'
+    DC H'0'
+RES_SUM DS CL8
+
+VNUMC DS CL5
+VDENC DS CL4
+WAITECB DC F'0'
+
+DEN_COM DC PL8'0'
+_DEN_COM DC PL8'0'
+DEN1 DS PL4
+_DEN1 DS PL4
+DEN2 DS PL4
+NUM1 DS PL4
+NUM2 DS PL4
+
+* GUARDO NUMERADOR|DENOMINADOR POR C/FRACCION INGRESADA.
+    DC H'88'
+    DC H'0'
+VEC DC 21CL4'0'
+VEC_SIG DS 10CL4
+
+MSJ_MAX DC CL40'Puede ingresar solo 10 fracciones.'
+
+WTOBLOCK DC H'44'
+         DC H'0'
+MSJ DS CL40
+
+TOTAL   DC PL2'0'
+
+ESVALID DS C
+
+CONT DC C'N'
+
+OPCC DS C
+OPC DS P
+
+DOBLE DS D
+        END

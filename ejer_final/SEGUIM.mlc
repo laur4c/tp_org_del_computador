@@ -1,0 +1,27 @@
+SEGUIM    SUBENTRY BASES=(3)
+          WTO   'HELLO WORLD'
+          
+          
+          LA 7,0
+          
+          LA 5,1
+          
+VUELVO    IC 6,BIFURCA+1
+
+          SRL 6,4
+          
+          DC X'1A65'
+          
+          SLL 6,4
+          
+          C 7,=F'0'
+          
+BIFURCA	  BC 7,SIGO
+
+          STC 6,BIFURCA+1
+          
+          B VUELVO 
+          
+SIGO      MVC 3492(7,3),=C'TERMINE'
+          SUBEXIT
+          END

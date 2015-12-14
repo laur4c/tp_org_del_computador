@@ -1,0 +1,142 @@
+* 2) [3 ptos] Codificar una rutina interna en assembler IBM Mainframe que reciba
+* los siguientes 3 parámetros:
+* a. [Entrada] Dos números en base 16 de 8 dígitos cada uno en formato
+* carácter EBCDIC.
+* b. [Salida] Un campo resultado en donde la rutina deberá devolver la
+* suma de los dos números en base 16 como otro número en base 16 en formato
+* carácter EBCDIC.
+* La rutina deberá validar ambos parámetros de entrada y dejar el resultado de la
+* suma pedida en el campo de salida.
+* Ejemplo:
+* Parámetros de entrada: 0000FA04 000001E2 (en caracteres EBCDIC)
+* Paramentos de salida: 0000FBE6 (en caracteres EBCDIC)
+* Además se pide codificar una posible invocación de la rutina dentro de un programa.
+
+
+F120214   SUBENTRY BASES=(3)
+          
+          BAL 10,SUMAR
+          
+          SUBEXIT
+          
+SUMAR 	  LA 9,NUM1C
+		  BAL 12,CAD_NUM
+		  
+		  L 5,NUM
+		  ST 5,RESULT1
+		  
+		  LA 9,NUM2C
+		  BAL 12,CAD_NUM
+		 
+		  L 5,NUM
+		  A 5,RESULT1
+		  ST 5,RESULT1
+		  
+		  LA 4,RESULT2
+		  
+		  LA 5,8
+		  L 7,RESULT1
+		  
+CICLO2	  LA 6,0
+		  SLDL 6,4
+		  
+		  C 6,=F'0'
+		  BL ERR
+		  
+		  C 6,=F'9'
+		  BH LETRA
+		  
+* ESTA ENTRE 0 -9 
+		  STC 6,0(4)
+		  OI 0(4),X'F0'
+		  B PROX
+
+LETRA	  C 6,=F'15'
+	      BH ERR
+	      
+* ESTA ENTRE A Y F
+		  A 6,=X'000000C1'	  	    
+	      S 6,=X'0000000A'
+	      
+	      STC 6,0(4)
+	      B PROX
+	      
+ERR	      WTO 'ERROR'
+		  
+PROX	  LA 4,1(4)
+		  BCT 5,CICLO2
+		  
+		 
+		  BR 10
+		  
+CAD_NUM   L 7,=F'0'
+		  ST 7,NUM
+		  
+		  L 7,=F'8'
+		  
+CICLO	  L 8,0
+		  IC 8,0(9)
+		  
+		  CLI 0(9),X'F0'
+		  BL ES_LETRA
+		  
+		  CLI 0(9),X'F9'
+		  BH ES_LETRA
+		  
+* ESTA ENTRE 0 Y 9
+		  S 8,=X'000000F0'
+		  B SIGO
+		  
+ES_LETRA  CLI 0(9),X'C1'
+		  BL INVAL
+ 
+		  CLI 0(9),X'C6'
+ 		  BH INVAL
+ 		  
+* ESTA ENTRE A Y F	
+		  S 8,=X'000000C1'
+		  A 8,=X'0000000A'	  
+ 		  B SIGO  
+ 		  
+INVAL	  WTO 'NO ES NRO HEXA'
+ 		  B SIGO1
+ 		  
+SIGO      LR 11,7
+
+		  C 11,=F'2'
+ 		  BE ES_UNO
+ 		  
+ 		  C 11,=F'1'
+ 		  BE ES_CERO
+
+		  S 11,=F'2'
+ 		  L 5,=F'16'
+ 		  
+MULTIP	  M 4,=F'16'
+ 		  BCT 11,MULTIP
+ 		  B SUM
+ 
+ES_UNO    L 5,=F'16'
+		  B SUM
+		 
+ES_CERO   L 5,=F'1'
+		  
+SUM		  MR 4,8
+ 		  
+ 		  A 5,NUM
+ 		  ST 5,NUM
+ 		  
+SIGO1	  LA 9,1(9)
+		  BCT 7,CICLO
+		  BR 12
+		  
+NUM DC F'0'
+
+RESULT1 DS F
+RESULT2 DS CL8
+
+NUM1C DC CL8'0000FA04'	  
+NUM2C DC CL8'000001E2'
+
+          END
+

@@ -1,0 +1,36 @@
+SEGUIM2   SUBENTRY
+          
+          SR 6,6
+          
+          LA 7,9
+          
+          L 5,=F'4'
+          
+          DR 6,5
+          
+          SLL 7,28
+          
+          SLDL 6,4
+          
+          STC 6,TMP
+          
+          PACK TMP+1(1),TMP
+          
+          MVN TMP+1(1),=X'BB'
+          
+          CP TMP+1(1),=P'-2'
+          
+          BC  8,SIGO
+          
+NOIGUAL   DC X'1A67'
+
+          B SIGO
+          
+TMP       DS C
+TMP2	  DS P
+
+SIGO	  DC X'1B67' 
+		            
+          
+          SUBEXIT
+          END

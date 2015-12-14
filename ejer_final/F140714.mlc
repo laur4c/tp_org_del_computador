@@ -1,0 +1,137 @@
+* Codificar una rutina interna en assembler IBM Mainframe que dado
+* un string (cadena de caracteres terminados con un byte en X?00?) devuelva en
+* una FULLWORD cu?l es la distancia m?nima entre vocales entre vocales
+* consecutivas dentro del string/ La definici?n del rotulo que representa al string
+* es: STRING DS F y contendr? la direcci?n de inicio de dicho string/ En caso de
+* que no haya vocales dentro del string devolver el valor -1.
+
+
+F140714   SUBENTRY
+          
+          BAL 10,DIST_MIN
+          
+          SUBEXIT
+          
+DIST_MIN  L 4,STRING
+		  LA 6,VEC_DIST
+		  
+		  L 5,=F'0' CONTADOR
+		  
+CICLO     CLI 0(4),X'00'
+          BE FIN_CIC
+          
+          BAL 12,ES_VOCAL
+          CLI VOCAL,C'S'
+          
+          BNE INC
+          AP TOT_VOC,=P'1'
+          
+          CL 5,=F'0'
+          BE SIGO
+          
+          ST 5,0(6)
+          
+          L 8,TOTAL
+          A 8,=F'1'
+          ST 8,TOTAL
+          
+          LA 6,4(6)
+          
+          L 5,=F'0' 
+          
+          B SIGO
+          
+INC	      A 5,=F'1' 
+		  
+SIGO	  LA 4,1(4)          
+          B CICLO
+           
+FIN_CIC   L 8,=F'-1'
+		  ST 8,0(6)
+		  
+		  CP TOT_VOC,=P'0'
+		  BNE CALC_MAX
+		  
+		  L 8,=F'-1'
+		  ST 8,RETVAL
+ 		  B FIN_RUT
+ 		  
+CALC_MAX  L 8,TOTAL
+		  S 8,=F'1'
+
+C1		  LA 6,VEC_DIST
+
+		  L 7,TOTAL
+		  S 7,=F'1'
+		   
+C2		  CLC 4(4,6),0(6)
+		  BH SIGO1
+		  
+* INTERCAMBIO
+		  L 9,0(6)
+		  L 11,4(6)
+		  
+		  ST 11,0(6)
+		  ST 9,4(6)
+		    
+SIGO1 	  LA 6,4(6)
+
+		  BCT 7,C2
+          BCT 8,C1 
+		
+		  LA 6,VEC_DIST
+		  L 8,0(6)
+		  ST 8,RETVAL
+ 		  
+FIN_RUT   BR 10
+
+
+* EN R4,DIR STRING
+ES_VOCAL  MVI VOCAL,C'N' 
+		  
+		  CLI 0(4),C'A'
+		  BNE S1
+		  
+		  MVI VOCAL,C'S'
+		  B FIN
+		  
+S1	      CLI 0(4),C'E'
+		  BNE S2
+		  
+		  MVI VOCAL,C'S'
+		  B FIN	
+		  
+S2		  CLI 0(4),C'I'
+		  BNE S3
+		  
+		  MVI VOCAL,C'S'
+		  B FIN
+		  
+S3		  CLI 0(4),C'O'
+		  BNE S4
+		  
+		  MVI VOCAL,C'S'
+		  B FIN
+		  
+S4		  CLI 0(4),C'U'
+		  BNE FIN
+		  
+		  MVI VOCAL,C'S'
+		  
+FIN	      BR 12
+      
+    
+RETVAL DS F
+
+TOTAL DC F'0'
+TOT_VOC DC P'0'
+
+VEC_DIST DS 256F
+          
+STRING DC A(CADENA)
+
+CADENA DC C'ACADDYEBNA' 
+	   DC X'00' 
+
+VOCAL DS C
+          END
